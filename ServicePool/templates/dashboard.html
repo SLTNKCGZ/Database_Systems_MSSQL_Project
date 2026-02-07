@@ -1,0 +1,2949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>ServicePool | Dashboard</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        .sidebar-link { transition: all 0.3s; border-left: 4px solid transparent; cursor: pointer; border-radius: 0.5rem; margin: 0 0.5rem; }
+        .sidebar-link:hover, .active-link { background-color: rgba(255, 255, 255, 0.1); border-left: 4px solid #38bdf8; }
+        .active-link { background-color: rgba(56, 189, 248, 0.15); }
+        .table-container { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .loading { opacity: 0.5; pointer-events: none; }
+    </style>
+</head>
+<body class="flex">
+
+    <aside class="w-72 bg-slate-900 text-white min-h-screen sticky top-0 flex flex-col shadow-2xl z-40">
+        <div class="p-8 text-center border-b border-slate-800">
+            <h1 class="text-3xl font-black tracking-tighter">SERVICE<span class="text-sky-400">POOL</span></h1>
+            <p class="text-slate-500 text-[10px] uppercase font-bold mt-1 tracking-[0.2em]">Management System</p>
+        </div>
+
+        <nav class="flex-1 mt-4 overflow-y-auto custom-scrollbar">
+            <div class="px-6 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest">Navigation</div>
+            <a href="/profile" class="flex items-center px-6 py-3 sidebar-link group">
+                <i class="fa-solid fa-user mr-3 w-5 text-slate-400 group-hover:text-sky-400 transition-colors"></i>
+                <span class="flex-1">Profil</span>
+            </a>
+            <!-- Customer İşlemleri -->
+            <div id="customer-section" class="hidden">
+                <div class="px-6 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest mt-4">Customer</div>
+                <a href="#" onclick="loadCustomerOrders(); return false;" class="flex items-center px-6 py-3 sidebar-link group">
+                    <i class="fa-solid fa-shopping-cart mr-3 w-5 text-slate-400 group-hover:text-sky-400 transition-colors"></i>
+                    <span class="flex-1">Orders</span>
+                </a>
+                <a href="#" onclick="loadCustomerOffers(); return false;" class="flex items-center px-6 py-3 sidebar-link group">
+                    <i class="fa-solid fa-file-invoice mr-3 w-5 text-slate-400 group-hover:text-sky-400 transition-colors"></i>
+                    <span class="flex-1">Offers</span>
+                </a>
+                <a href="#" onclick="loadCustomerRepairRequests(); return false;" class="flex items-center px-6 py-3 sidebar-link group">
+                    <i class="fa-solid fa-wrench mr-3 w-5 text-slate-400 group-hover:text-sky-400 transition-colors"></i>
+                    <span class="flex-1">Repair Requests</span>
+                </a>
+                <a href="#" onclick="loadCustomerProducts(); return false;" class="flex items-center px-6 py-3 sidebar-link group">
+                    <i class="fa-solid fa-box mr-3 w-5 text-slate-400 group-hover:text-sky-400 transition-colors"></i>
+                    <span class="flex-1">Ürünlerim</span>
+                </a>
+                <a href="#" onclick="loadCustomerFeedback(); return false;" class="flex items-center px-6 py-3 sidebar-link group">
+                    <i class="fa-solid fa-star mr-3 w-5 text-slate-400 group-hover:text-sky-400 transition-colors"></i>
+                    <span class="flex-1">Feedback</span>
+                </a>
+            </div>
+            <!-- Employee İşlemleri -->
+            <div id="employee-section" class="hidden">
+                <div class="px-6 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest mt-4">Employee</div>
+                <a href="#" onclick="loadEmployeeRepairRequests(); return false;" class="flex items-center px-6 py-3 sidebar-link group">
+                    <i class="fa-solid fa-wrench mr-3 w-5 text-slate-400 group-hover:text-sky-400 transition-colors"></i>
+                    <span class="flex-1">Repair Requests</span>
+                </a>
+            </div>
+            <div id="forms-section" class="px-6 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest mt-4">Forms</div>
+            <a href="#" onclick="showOfferForm(); return false;" id="create-offer-link" class="flex items-center px-6 py-3 sidebar-link group">
+                <i class="fa-solid fa-file-invoice mr-3 w-5 text-slate-400 group-hover:text-sky-400 transition-colors"></i>
+                <span class="flex-1">Create Offer</span>
+            </a>
+            <a href="#" onclick="if (userType !== 'employee') return false; showInventoryForm(); return false;" id="create-inventory-link" class="flex items-center px-6 py-3 sidebar-link group hidden">
+                <i class="fa-solid fa-boxes-stacked mr-3 w-5 text-slate-400 group-hover:text-sky-400 transition-colors"></i>
+                <span class="flex-1">Add Inventory</span>
+            </a>
+            <a href="#" onclick="if (userType !== 'employee') return false; showProductForm(); return false;" id="create-product-link" class="flex items-center px-6 py-3 sidebar-link group hidden">
+                <i class="fa-solid fa-box mr-3 w-5 text-slate-400 group-hover:text-sky-400 transition-colors"></i>
+                <span class="flex-1">Add Product</span>
+            </a>
+            <div id="database-tables-section" class="px-6 py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest mt-4">Database Tables</div>
+            <div id="table-list" class="space-y-0.5 px-2">
+                <!-- Tablolar buraya dinamik olarak yüklenecek -->
+                <div class="px-6 py-2 text-slate-400 text-sm">Loading tables...</div>
+            </div>
+        </nav>
+
+        <div class="p-6 bg-slate-950">
+            <button onclick="window.location.href='/auth/logout'" class="w-full py-3 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white rounded-xl transition-all font-bold flex items-center justify-center border border-red-500/20">
+                <i class="fa-solid fa-power-off mr-2"></i> Exit System
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <header class="bg-white border-b border-slate-200 p-6 flex justify-between items-center shadow-sm">
+            <div>
+                <h2 id="section-title" class="text-2xl font-black text-slate-800 tracking-tight">Select a Table</h2>
+                <p id="section-desc" class="text-sm text-slate-400">Choose a table from the sidebar to view its data</p>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <div class="text-right">
+                    <p class="text-sm font-bold text-slate-700" id="user-info">Employee</p>
+                    <p class="text-[10px] text-sky-600 font-bold uppercase" id="user-type-info">User</p>
+                </div>
+                <div class="w-12 h-12 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-8 overflow-y-auto">
+            <!-- Arama Kutusu -->
+            <div id="search-container" class="mb-6 hidden">
+                <div class="bg-white rounded-2xl shadow-lg border border-slate-200 p-6">
+                    <div class="flex items-center space-x-4">
+                        <div class="flex-1 relative">
+                            <i class="fa-solid fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                            <input 
+                                type="text" 
+                                id="search-input" 
+                                placeholder="Tablo içeriğinde ara..." 
+                                class="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 outline-none transition-all text-slate-700"
+                                onkeyup="handleSearch(event)"
+                            />
+                        </div>
+                        <button 
+                            onclick="clearSearch()" 
+                            id="clear-search-btn"
+                            class="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-all font-medium hidden"
+                        >
+                            <i class="fa-solid fa-times mr-2"></i> Temizle
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="table-content" class="bg-white rounded-[2rem] shadow-xl border border-slate-200 overflow-hidden table-container">
+                <div class="p-12 text-center text-slate-400">
+                    <i class="fa-solid fa-table text-6xl mb-4 opacity-20"></i>
+                    <p class="text-lg font-medium">Select a table from the sidebar to view data</p>
+                </div>
+            </div>
+            
+            <!-- Offer Form Container -->
+            <div id="offer-form-container" class="hidden">
+                <div class="bg-white rounded-[2rem] shadow-xl border border-slate-200 overflow-hidden table-container">
+                    <!-- Offer Form buraya eklenecek -->
+                </div>
+            </div>
+            
+            <!-- Inventory Form Container -->
+            <div id="inventory-form-container" class="hidden">
+                <div class="bg-white rounded-[2rem] shadow-xl border border-slate-200 overflow-hidden table-container">
+                    <!-- Inventory Form buraya eklenecek -->
+                </div>
+            </div>
+            
+            <!-- Product Form Container -->
+            <div id="product-form-container" class="hidden">
+                <div class="bg-white rounded-[2rem] shadow-xl border border-slate-200 overflow-hidden table-container">
+                    <!-- Product Form buraya eklenecek -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let currentTable = null;
+        let currentSchema = null;
+        let currentTableName = null;
+        let currentFullName = null;
+        let searchTimeout = null;
+        let isHR = false; // Kullanıcının İnsan Kaynakları departmanında olup olmadığı
+        const userType = '{{ user_type }}' || 'employee';
+
+        // User type bilgisini göster
+        document.getElementById('user-type-info').textContent = userType === 'employee' ? 'Employee' : 'Customer';
+        
+        // Kullanıcının departmanını kontrol et
+        async function checkHRPermission() {
+            try {
+                const response = await fetch('/hr/check-department', {
+                    credentials: 'include'
+                });
+                if (!response.ok) {
+                    console.error('HR check failed:', response.status);
+                    isHR = false;
+                    return;
+                }
+                const data = await response.json();
+                isHR = data.is_hr || false;
+                console.log('HR permission check:', { isHR, data });
+            } catch (error) {
+                console.error('Error checking HR permission:', error);
+                isHR = false;
+            }
+        }
+
+        // HTML escape fonksiyonu
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Tablo ismini formatla (dbo. prefix'ini kaldır ve güzel formatla)
+        function formatTableName(fullName) {
+            // dbo.TableName -> TableName
+            // Schema.TableName -> TableName
+            if (fullName.includes('.')) {
+                return fullName.split('.').pop();
+            }
+            return fullName;
+        }
+
+        // Tablo ismini okunabilir formata çevir (PascalCase'i kelimelere ayır)
+        function formatTableDisplayName(tableName) {
+            if (!tableName) return tableName;
+            
+            // vw_ prefix'ini kaldır
+            let name = tableName.replace(/^vw_/i, '');
+            
+            // PascalCase'i kelimelere ayır
+            // vw_CompanyCustomer -> Company Customer
+            // vw_OfferLineDetails -> Offer Line Details
+            name = name
+                .replace(/([a-z])([A-Z])/g, '$1 $2')  // Küçük harften büyük harfe geçiş
+                .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')  // Birden fazla büyük harften sonra küçük harf
+                .trim();
+            
+            // İlk harfi büyük yap
+            if (name.length > 0) {
+                name = name.charAt(0).toUpperCase() + name.slice(1);
+            }
+            
+            return name;
+        }
+
+        
+        async function loadTables() {
+            try {
+                // Customer için tablo listesini gösterme - sadece sidebar menülerini kullan
+                if (userType === 'customer') {
+                    // Customer için tablo listesi zaten gizli, buraya gelmemeli
+                    return;
+                }
+                
+                // Employee için normal tablo listesi
+                const response = await fetch('/api/tables/list', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                const tableList = document.getElementById('table-list');
+                tableList.innerHTML = '';
+                
+                if (data.tables && data.tables.length > 0) {
+                    data.tables.forEach(table => {
+                        const link = document.createElement('a');
+                        link.href = '#';
+                        link.className = 'flex items-center px-6 py-3 sidebar-link group';
+                        // Sadece tablo ismini göster (dbo. prefix'i olmadan ve okunabilir formatta)
+                        let displayName = table.display_name || table.table_name;
+                        // Eğer display_name yoksa veya view ismi ise formatla
+                        if (!table.display_name || table.table_name.startsWith('vw_')) {
+                            displayName = formatTableDisplayName(table.table_name);
+                        } else {
+                            displayName = formatTableName(displayName);
+                        }
+                        link.innerHTML = `
+                            <i class="fa-solid fa-table mr-3 w-5 text-slate-400 group-hover:text-sky-400 transition-colors"></i> 
+                            <span class="flex-1">${displayName}</span>
+                        `;
+                        link.onclick = (e) => {
+                            e.preventDefault();
+                            // Employee, Inventory veya Products type ise özel UI göster
+                            if (table.type === 'employee') {
+                                loadEmployeeData(table);
+                            } else if (table.type === 'inventory') {
+                                loadInventoryData(table);
+                            } else if (table.type === 'products') {
+                                loadProductsData(table);
+                            } else {
+                            loadTableData(table.schema, table.table_name, table.full_name);
+                            }
+                            // Active state
+                            document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active-link'));
+                            link.classList.add('active-link');
+                        };
+                        tableList.appendChild(link);
+                    });
+                } else {
+                    tableList.innerHTML = '<div class="px-6 py-2 text-slate-400 text-sm">No tables found</div>';
+                }
+            } catch (error) {
+                console.error('Error loading tables:', error);
+                document.getElementById('table-list').innerHTML = '<div class="px-6 py-2 text-red-400 text-sm">Error loading tables</div>';
+            }
+        }
+
+        // Employee verilerini yükle (tab UI ile)
+        let currentEmployeeTab = 'salaried'; // 'salaried' veya 'technician'
+        let currentEmployeeTable = null;
+        
+        async function loadEmployeeData(table) {
+            currentEmployeeTable = table;
+            currentEmployeeTab = 'salaried'; // Varsayılan olarak Kadrolu
+            
+            // Form container'ları gizle
+            document.getElementById('offer-form-container').classList.add('hidden');
+            document.getElementById('inventory-form-container').classList.add('hidden');
+            document.getElementById('product-form-container').classList.add('hidden');
+            
+            // Table content'i göster
+            document.getElementById('table-content').classList.remove('hidden');
+            
+            // Başlık güncelle
+            document.getElementById('section-title').textContent = 'Employee';
+            document.getElementById('section-desc').textContent = 'Çalışan bilgileri';
+            
+            // Arama kutusunu göster
+            document.getElementById('search-container').classList.remove('hidden');
+            document.getElementById('search-input').value = '';
+            document.getElementById('clear-search-btn').classList.add('hidden');
+            
+            // İlk tab'ı yükle
+            await loadEmployeeTab('salaried');
+        }
+        
+        async function loadEmployeeTab(tabType) {
+            currentEmployeeTab = tabType;
+            
+            if (!currentEmployeeTable) return;
+            
+            // Hangi view'ü kullanacağımızı belirle
+            let viewToLoad = null;
+            if (tabType === 'salaried') {
+                viewToLoad = currentEmployeeTable.salaried_view;
+            } else if (tabType === 'technician') {
+                viewToLoad = currentEmployeeTable.technician_view;
+            }
+            
+            if (!viewToLoad) {
+                console.error('View not found for tab:', tabType);
+                return;
+            }
+            
+            // Tab UI'ını göster ve veriyi yükle
+            await loadTableData(viewToLoad.schema, viewToLoad.table_name, viewToLoad.full_name, '', true);
+        }
+        
+        // Inventory verilerini yükle (tab UI ile)
+        let currentInventoryTab = 'server'; // 'server' veya 'storage'
+        let currentInventoryTable = null;
+        
+        async function loadInventoryData(table) {
+            currentInventoryTable = table;
+            currentInventoryTab = 'server'; // Varsayılan olarak Server
+            
+            // Form container'ları gizle
+            document.getElementById('offer-form-container').classList.add('hidden');
+            document.getElementById('inventory-form-container').classList.add('hidden');
+            document.getElementById('product-form-container').classList.add('hidden');
+            
+            // Table content'i göster
+            document.getElementById('table-content').classList.remove('hidden');
+            
+            // Başlık güncelle
+            document.getElementById('section-title').textContent = 'Inventory';
+            document.getElementById('section-desc').textContent = 'Envanter bilgileri';
+            
+            // Arama kutusunu göster
+            document.getElementById('search-container').classList.remove('hidden');
+            document.getElementById('search-input').value = '';
+            document.getElementById('clear-search-btn').classList.add('hidden');
+            
+            // İlk tab'ı yükle
+            await loadInventoryTab('server');
+        }
+        
+        async function loadInventoryTab(tabType) {
+            currentInventoryTab = tabType;
+            
+            if (!currentInventoryTable) return;
+            
+            // Hangi view'ü kullanacağımızı belirle
+            let viewToLoad = null;
+            if (tabType === 'server') {
+                viewToLoad = currentInventoryTable.server_view;
+            } else if (tabType === 'storage') {
+                viewToLoad = currentInventoryTable.storage_view;
+            }
+            
+            if (!viewToLoad) {
+                console.error('View not found for tab:', tabType);
+                return;
+            }
+            
+            // Tab UI'ını göster ve veriyi yükle
+            await loadTableData(viewToLoad.schema, viewToLoad.table_name, viewToLoad.full_name, '', true, 'inventory');
+        }
+        
+        // Products verilerini yükle (tab UI ile)
+        let currentProductsTab = 'server'; // 'server' veya 'storage'
+        let currentProductsTable = null;
+        
+        async function loadProductsData(table) {
+            currentProductsTable = table;
+            currentProductsTab = 'server'; // Varsayılan olarak Server
+            
+            // Form container'ları gizle
+            document.getElementById('offer-form-container').classList.add('hidden');
+            document.getElementById('inventory-form-container').classList.add('hidden');
+            document.getElementById('product-form-container').classList.add('hidden');
+            
+            // Table content'i göster
+            document.getElementById('table-content').classList.remove('hidden');
+            
+            // Başlık güncelle
+            document.getElementById('section-title').textContent = 'Products';
+            document.getElementById('section-desc').textContent = 'Ürün bilgileri';
+            
+            // Arama kutusunu göster
+            document.getElementById('search-container').classList.remove('hidden');
+            document.getElementById('search-input').value = '';
+            document.getElementById('clear-search-btn').classList.add('hidden');
+            
+            // İlk tab'ı yükle
+            await loadProductsTab('server');
+        }
+        
+        async function loadProductsTab(tabType) {
+            currentProductsTab = tabType;
+            
+            if (!currentProductsTable) return;
+            
+            // Hangi view'ü kullanacağımızı belirle
+            let viewToLoad = null;
+            if (tabType === 'server') {
+                viewToLoad = currentProductsTable.server_view;
+            } else if (tabType === 'storage') {
+                viewToLoad = currentProductsTable.storage_view;
+            }
+            
+            if (!viewToLoad) {
+                console.error('View not found for tab:', tabType);
+                return;
+            }
+            
+            // Tab UI'ını göster ve veriyi yükle
+            await loadTableData(viewToLoad.schema, viewToLoad.table_name, viewToLoad.full_name, '', true, 'products');
+        }
+
+        // Tablo verilerini yükle
+        async function loadTableData(schema, tableName, fullName, searchTerm = '', isEmployeeTab = false, tabType = 'employee') {
+            currentTable = fullName;
+            currentSchema = schema;
+            currentTableName = tableName;
+            currentFullName = fullName;
+            
+            // Form container'ları gizle
+            document.getElementById('offer-form-container').classList.add('hidden');
+            document.getElementById('inventory-form-container').classList.add('hidden');
+            document.getElementById('product-form-container').classList.add('hidden');
+            
+            // Table content'i göster
+            document.getElementById('table-content').classList.remove('hidden');
+            
+            // Arama kutusunu göster
+            document.getElementById('search-container').classList.remove('hidden');
+            
+            const contentDiv = document.getElementById('table-content');
+            contentDiv.classList.add('loading');
+            contentDiv.innerHTML = '<div class="p-12 text-center"><i class="fa-solid fa-spinner fa-spin text-4xl text-sky-500"></i><p class="mt-4 text-slate-400">Loading data...</p></div>';
+
+            try {
+                // Schema ve table name ile endpoint'e istek at (arama parametresi ile)
+                let url = `/api/tables/${schema}/${tableName}/data?limit=100&offset=0`;
+                if (searchTerm && searchTerm.trim()) {
+                    url += `&search=${encodeURIComponent(searchTerm.trim())}`;
+                }
+                const response = await fetch(url, {
+                    credentials: 'include'
+                });
+                
+                // 401 hatası durumunda oturum sona ermiş mesajı göster
+                if (response.status === 401) {
+                    let errorMessage = 'Oturumunuz sona ermiş. Lütfen tekrar giriş yapın.';
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.detail || errorMessage;
+                    } catch (e) {
+                        // JSON parse edilemezse varsayılan mesajı kullan
+                    }
+                    contentDiv.innerHTML = `
+                        <div class="p-12 text-center">
+                            <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-orange-50 mb-6">
+                                <i class="fa-solid fa-exclamation-triangle text-5xl text-orange-500"></i>
+                            </div>
+                            <h2 class="text-2xl font-black text-slate-800 mb-4">Oturum Sona Erdi</h2>
+                            <p class="text-lg text-slate-600 mb-8">${errorMessage}</p>
+                            <button onclick="window.location.href='/auth/login?role=employee'" class="px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-all font-medium">
+                                <i class="fa-solid fa-sign-in-alt mr-2"></i> Giriş Yap
+                            </button>
+                        </div>
+                    `;
+                    contentDiv.classList.remove('loading');
+                    return;
+                }
+                
+                // 403 hatası durumunda yetki yok mesajı göster
+                if (response.status === 403) {
+                    let errorMessage = 'Bu tabloya erişmek için yetkiniz yok.';
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.detail || errorMessage;
+                    } catch (e) {
+                        // JSON parse edilemezse varsayılan mesajı kullan
+                    }
+                    contentDiv.innerHTML = `
+                        <div class="p-12 text-center">
+                            <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-red-50 mb-6">
+                                <i class="fa-solid fa-ban text-5xl text-red-500"></i>
+                            </div>
+                            <h2 class="text-2xl font-black text-slate-800 mb-4">Yetkiniz Yok</h2>
+                            <p class="text-lg text-slate-600 mb-8">${errorMessage}</p>
+                            <p class="text-sm text-slate-400">Sadece İnsan Kaynakları departmanı bu tabloya erişebilir.</p>
+                        </div>
+                    `;
+                    contentDiv.classList.remove('loading');
+                    return;
+                }
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+
+                // Başlık güncelle - Employee, Inventory veya Products için özel başlık
+                if (isEmployeeTab && tabType === 'employee' && currentEmployeeTable) {
+                    document.getElementById('section-title').textContent = 'Employee';
+                    const descText = searchTerm && searchTerm.trim() 
+                        ? `${data.total_count} kayıt bulundu (arama: "${searchTerm}")` 
+                        : `${data.total_count} kayıt bulundu`;
+                    document.getElementById('section-desc').textContent = descText;
+                } else if (isEmployeeTab && tabType === 'inventory' && currentInventoryTable) {
+                    document.getElementById('section-title').textContent = 'Inventory';
+                    const descText = searchTerm && searchTerm.trim() 
+                        ? `${data.total_count} kayıt bulundu (arama: "${searchTerm}")` 
+                        : `${data.total_count} kayıt bulundu`;
+                    document.getElementById('section-desc').textContent = descText;
+                } else if (isEmployeeTab && tabType === 'products' && currentProductsTable) {
+                    document.getElementById('section-title').textContent = 'Products';
+                    const descText = searchTerm && searchTerm.trim() 
+                        ? `${data.total_count} kayıt bulundu (arama: "${searchTerm}")` 
+                        : `${data.total_count} kayıt bulundu`;
+                    document.getElementById('section-desc').textContent = descText;
+                } else {
+                    // View isimlerini okunabilir formata çevir
+                    let displayTableName = formatTableName(tableName);
+                    // Eğer view ismi ise (vw_ ile başlıyorsa) formatla
+                    if (tableName.startsWith('vw_')) {
+                        displayTableName = formatTableDisplayName(tableName);
+                    }
+                document.getElementById('section-title').textContent = displayTableName;
+                const descText = searchTerm && searchTerm.trim() 
+                    ? `${data.total_count} kayıt bulundu (arama: "${searchTerm}")` 
+                    : `${data.total_count} kayıt bulundu`;
+                document.getElementById('section-desc').textContent = descText;
+                }
+                
+                // Arama kutusunu güncelle
+                document.getElementById('search-input').value = searchTerm || '';
+                if (searchTerm && searchTerm.trim()) {
+                    document.getElementById('clear-search-btn').classList.remove('hidden');
+                } else {
+                    document.getElementById('clear-search-btn').classList.add('hidden');
+                }
+
+                // Employee veya Inventory tab UI'ı için özel başlık ekle
+                let html = '';
+                if (isEmployeeTab && tabType === 'employee' && currentEmployeeTable) {
+                    html += `
+                        <div class="mb-6 border-b border-slate-200">
+                            <div class="flex space-x-2">
+                                <button 
+                                    onclick="loadEmployeeTab('salaried')" 
+                                    id="tab-salaried"
+                                    class="px-6 py-4 font-bold text-sm uppercase tracking-wider transition-all border-b-4 ${
+                                        currentEmployeeTab === 'salaried' 
+                                            ? 'border-sky-500 text-sky-600' 
+                                            : 'border-transparent text-slate-400 hover:text-slate-600'
+                                    }"
+                                >
+                                    Kadrolu
+                                </button>
+                                <button 
+                                    onclick="loadEmployeeTab('technician')" 
+                                    id="tab-technician"
+                                    class="px-6 py-4 font-bold text-sm uppercase tracking-wider transition-all border-b-4 ${
+                                        currentEmployeeTab === 'technician' 
+                                            ? 'border-sky-500 text-sky-600' 
+                                            : 'border-transparent text-slate-400 hover:text-slate-600'
+                                    }"
+                                >
+                                    Technician
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } else if (isEmployeeTab && tabType === 'inventory' && currentInventoryTable) {
+                    html += `
+                        <div class="mb-6 border-b border-slate-200">
+                            <div class="flex space-x-2">
+                                <button 
+                                    onclick="loadInventoryTab('server')" 
+                                    id="tab-server"
+                                    class="px-6 py-4 font-bold text-sm uppercase tracking-wider transition-all border-b-4 ${
+                                        currentInventoryTab === 'server' 
+                                            ? 'border-sky-500 text-sky-600' 
+                                            : 'border-transparent text-slate-400 hover:text-slate-600'
+                                    }"
+                                >
+                                    Server
+                                </button>
+                                <button 
+                                    onclick="loadInventoryTab('storage')" 
+                                    id="tab-storage"
+                                    class="px-6 py-4 font-bold text-sm uppercase tracking-wider transition-all border-b-4 ${
+                                        currentInventoryTab === 'storage' 
+                                            ? 'border-sky-500 text-sky-600' 
+                                            : 'border-transparent text-slate-400 hover:text-slate-600'
+                                    }"
+                                >
+                                    Storage
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } else if (isEmployeeTab && tabType === 'products' && currentProductsTable) {
+                    html += `
+                        <div class="mb-6 border-b border-slate-200">
+                            <div class="flex space-x-2">
+                                <button 
+                                    onclick="loadProductsTab('server')" 
+                                    id="tab-server"
+                                    class="px-6 py-4 font-bold text-sm uppercase tracking-wider transition-all border-b-4 ${
+                                        currentProductsTab === 'server' 
+                                            ? 'border-sky-500 text-sky-600' 
+                                            : 'border-transparent text-slate-400 hover:text-slate-600'
+                                    }"
+                                >
+                                    Server
+                                </button>
+                                <button 
+                                    onclick="loadProductsTab('storage')" 
+                                    id="tab-storage"
+                                    class="px-6 py-4 font-bold text-sm uppercase tracking-wider transition-all border-b-4 ${
+                                        currentProductsTab === 'storage' 
+                                            ? 'border-sky-500 text-sky-600' 
+                                            : 'border-transparent text-slate-400 hover:text-slate-600'
+                                    }"
+                                >
+                                    Storage
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Tablo oluştur
+                html += '<div class="overflow-x-auto"><table class="w-full text-left border-collapse">';
+                
+                // Header
+                html += '<thead class="bg-slate-50 border-b border-slate-200"><tr>';
+                data.columns.forEach(col => {
+                    html += `<th class="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest">${col}</th>`;
+                });
+                // Actions kolonu sadece restricted tablolar için ve HR ise göster
+                // Employee tab'ları için de HR ise Actions göster
+                const restrictedTables = ['Employee', 'SalariedEmployee', 'Technician'];
+                const isEmployeeView = tableName.includes('SalariedEmployees') || tableName.includes('Technician');
+                const isRestrictedTable = restrictedTables.includes(tableName) || tableName.startsWith('E-') || isEmployeeView;
+                if (isRestrictedTable && isHR) {
+                    html += '<th class="px-8 py-5 text-[11px] font-black text-slate-400 uppercase text-center tracking-widest">Actions</th>';
+                }
+                // vw_OrderSummary için employee ise "Tamamla" butonu kolonu ekle
+                if (tableName === 'vw_OrderSummary' && userType === 'employee') {
+                    html += '<th class="px-8 py-5 text-[11px] font-black text-slate-400 uppercase text-center tracking-widest">İşlem</th>';
+                }
+                html += '</tr></thead>';
+
+                // Body
+                html += '<tbody class="divide-y divide-slate-100 text-slate-600">';
+                if (data.data && data.data.length > 0) {
+                    data.data.forEach(row => {
+                        html += '<tr class="hover:bg-sky-50/50 transition-colors">';
+                        data.columns.forEach((col, index) => {
+                            const value = row[col] !== null && row[col] !== undefined ? row[col] : '';
+                            const cellClass = index === 0 ? "font-black text-sky-600" : "font-medium";
+                            html += `<td class="px-8 py-6 ${cellClass}">${value}</td>`;
+                        });
+                        // Actions butonları sadece restricted tablolar için ve HR ise göster
+                        // Employee tab'ları için de HR ise Actions göster
+                        const restrictedTables = ['Employee', 'SalariedEmployee', 'Technician'];
+                        const isEmployeeView = tableName.includes('SalariedEmployees') || tableName.includes('Technician');
+                        const isRestrictedTable = restrictedTables.includes(tableName) || tableName.startsWith('E-') || isEmployeeView;
+                        if (isRestrictedTable && isHR) {
+                            // Row verisini Unicode-safe base64 ile encode et
+                            const rowJson = JSON.stringify(row);
+                            const rowData = btoa(unescape(encodeURIComponent(rowJson)));
+                            html += `
+                                <td class="px-8 py-6 text-center">
+                                    <div class="flex justify-center space-x-2">
+                                        <button onclick="editRecord('${tableName}', '${rowData}')" class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 hover:bg-sky-600 hover:text-white transition-all cursor-pointer"><i class="fa-solid fa-pen"></i></button>
+                                        <button onclick="deleteRecord('${tableName}', '${rowData}')" class="w-10 h-10 rounded-xl bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all cursor-pointer"><i class="fa-solid fa-trash-alt"></i></button>
+                                    </div>
+                                </td>
+                            `;
+                        }
+                        // vw_OrderSummary için employee ise "Tamamla" ve "Reddet" butonları ekle
+                        if (tableName === 'vw_OrderSummary' && userType === 'employee') {
+                            // SaleID'yi kolon isimlerinden bul
+                            const saleIdCol = data.columns.find(c => c.toLowerCase() === 'saleid');
+                            const saleId = saleIdCol ? row[saleIdCol] : (row['SaleID'] || row['saleid'] || row['SaleId']);
+                            // Status'u kolon isimlerinden bul
+                            const statusCol = data.columns.find(c => c.toLowerCase() === 'status');
+                            const currentStatus = statusCol ? row[statusCol] : (row['Status'] || row['status'] || '');
+                            // Sadece NotCompleted veya NotAccepted durumunda butonlar göster
+                            if (saleId && (currentStatus === 'NotCompleted' || currentStatus === 'NotAccepted' || !currentStatus || currentStatus === '')) {
+                                html += `
+                                    <td class="px-8 py-6 text-center">
+                                        <div class="flex justify-center space-x-2">
+                                            <button onclick="completeOrder(${saleId})" class="px-4 py-2 bg-green-50 text-green-600 hover:bg-green-600 hover:text-white rounded-xl transition-all font-medium text-sm">
+                                                <i class="fa-solid fa-check mr-1"></i> Tamamla
+                                            </button>
+                                            <button onclick="rejectOrder(${saleId})" class="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-xl transition-all font-medium text-sm">
+                                                <i class="fa-solid fa-times mr-1"></i> Reddet
+                                            </button>
+                                        </div>
+                                    </td>
+                                `;
+                            } else {
+                                html += `<td class="px-8 py-6 text-center text-slate-400">-</td>`;
+                            }
+                        }
+                        html += '</tr>';
+                    });
+                } else {
+                    const restrictedTables = ['Employee', 'SalariedEmployee', 'Technician'];
+                    const isEmployeeView = tableName.includes('SalariedEmployees') || tableName.includes('Technician');
+                    const isRestrictedTable = restrictedTables.includes(tableName) || tableName.startsWith('E-') || isEmployeeView;
+                    let colspan = data.columns.length;
+                    if (isRestrictedTable && isHR) {
+                        colspan += 1;
+                    }
+                    if (tableName === 'vw_OrderSummary' && userType === 'employee') {
+                        colspan += 1;
+                    }
+                    html += `<tr><td colspan="${colspan}" class="px-8 py-12 text-center text-slate-400">No data found</td></tr>`;
+                }
+                html += '</tbody></table></div>';
+
+                // Pagination info
+                if (data.total_count > 0) {
+                    html += `<div class="p-6 bg-slate-50 border-t border-slate-200 flex justify-between items-center">
+                        <p class="text-sm text-slate-500">Showing ${data.data.length} of ${data.total_count} records</p>
+                    </div>`;
+                }
+
+                contentDiv.innerHTML = html;
+                contentDiv.classList.remove('loading');
+            } catch (error) {
+                console.error('Error loading table data:', error);
+                contentDiv.innerHTML = `
+                    <div class="p-12 text-center text-red-500">
+                        <i class="fa-solid fa-exclamation-triangle text-4xl mb-4"></i>
+                        <p class="text-lg font-medium">Error loading table data</p>
+                        <p class="text-sm text-slate-400 mt-2">${error.message}</p>
+                    </div>
+                `;
+                contentDiv.classList.remove('loading');
+            }
+        }
+
+        // Search handler - Employee tab'ları için de çalışsın
+        function handleSearch(event) {
+            const searchTerm = event.target.value;
+            
+            // Debounce - 500ms bekle
+            clearTimeout(searchTimeout);
+            
+            searchTimeout = setTimeout(() => {
+                if (currentEmployeeTable) {
+                    // Employee tab'ı için arama - searchTerm'i de geçir
+                    loadEmployeeTabWithSearch(currentEmployeeTab, searchTerm);
+                } else if (currentInventoryTable) {
+                    // Inventory tab'ı için arama - searchTerm'i de geçir
+                    loadInventoryTabWithSearch(currentInventoryTab, searchTerm);
+                } else if (currentProductsTable) {
+                    // Products tab'ı için arama - searchTerm'i de geçir
+                    loadProductsTabWithSearch(currentProductsTab, searchTerm);
+                } else if (currentSchema && currentTableName) {
+                    // Normal tablo için arama
+                    loadTableData(currentSchema, currentTableName, currentFullName, searchTerm);
+                }
+            }, 500);
+        }
+        
+        function clearSearch() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('clear-search-btn').classList.add('hidden');
+            if (currentEmployeeTable) {
+                loadEmployeeTab(currentEmployeeTab);
+            } else if (currentInventoryTable) {
+                loadInventoryTab(currentInventoryTab);
+            } else if (currentProductsTable) {
+                loadProductsTab(currentProductsTab);
+            } else if (currentSchema && currentTableName) {
+                loadTableData(currentSchema, currentTableName, currentFullName, '');
+            }
+        }
+        
+        function loadEmployeeTabWithSearch(tabType, searchTerm) {
+            currentEmployeeTab = tabType;
+            
+            if (!currentEmployeeTable) return;
+            
+            // Hangi view'ü kullanacağımızı belirle
+            let viewToLoad = null;
+            if (tabType === 'salaried') {
+                viewToLoad = currentEmployeeTable.salaried_view;
+            } else if (tabType === 'technician') {
+                viewToLoad = currentEmployeeTable.technician_view;
+            }
+            
+            if (!viewToLoad) {
+                console.error('View not found for tab:', tabType);
+                return;
+            }
+            
+            // Tab UI'ını göster ve veriyi yükle (arama ile)
+            loadTableData(viewToLoad.schema, viewToLoad.table_name, viewToLoad.full_name, searchTerm, true);
+        }
+        
+        function loadInventoryTabWithSearch(tabType, searchTerm) {
+            currentInventoryTab = tabType;
+            
+            if (!currentInventoryTable) return;
+            
+            // Hangi view'ü kullanacağımızı belirle
+            let viewToLoad = null;
+            if (tabType === 'server') {
+                viewToLoad = currentInventoryTable.server_view;
+            } else if (tabType === 'storage') {
+                viewToLoad = currentInventoryTable.storage_view;
+            }
+            
+            if (!viewToLoad) {
+                console.error('View not found for tab:', tabType);
+                return;
+            }
+            
+            // Tab UI'ını göster ve veriyi yükle (arama ile)
+            loadTableData(viewToLoad.schema, viewToLoad.table_name, viewToLoad.full_name, searchTerm, true, 'inventory');
+        }
+        
+        function loadProductsTabWithSearch(tabType, searchTerm) {
+            currentProductsTab = tabType;
+            
+            if (!currentProductsTable) return;
+            
+            // Hangi view'ü kullanacağımızı belirle
+            let viewToLoad = null;
+            if (tabType === 'server') {
+                viewToLoad = currentProductsTable.server_view;
+            } else if (tabType === 'storage') {
+                viewToLoad = currentProductsTable.storage_view;
+            }
+            
+            if (!viewToLoad) {
+                console.error('View not found for tab:', tabType);
+                return;
+            }
+            
+            // Tab UI'ını göster ve veriyi yükle (arama ile)
+            loadTableData(viewToLoad.schema, viewToLoad.table_name, viewToLoad.full_name, searchTerm, true, 'products');
+        }
+        
+        // Department listesini yükle
+        let departmentsList = [];
+        async function loadDepartments() {
+            try {
+                const response = await fetch('/auth/departments');
+                if (response.ok) {
+                    const data = await response.json();
+                    departmentsList = data.departments || [];
+                }
+            } catch (error) {
+                console.error('Error loading departments:', error);
+            }
+        }
+
+        // Edit modal ve fonksiyonu
+        async function editRecord(tableName, rowData) {
+            // Row data'yı decode et (Unicode-safe)
+            let row;
+            try {
+                if (typeof rowData === 'string') {
+                    const decoded = decodeURIComponent(escape(atob(rowData)));
+                    row = JSON.parse(decoded);
+                } else {
+                    row = rowData;
+                }
+            } catch (e) {
+                console.error('Error parsing row data:', e);
+                alert('Kayıt verisi okunamadı: ' + e.message);
+                return;
+            }
+            
+            // Department listesi yüklenmemişse yükle
+            if (departmentsList.length === 0) {
+                await loadDepartments();
+            }
+            
+            console.log('Edit record:', tableName, row);
+            
+            // Modal oluştur
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.id = 'edit-modal';
+            
+            // Form oluştur
+            let formHtml = `
+                <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-black text-slate-800">Kayıt Düzenle</h2>
+                        <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600">
+                            <i class="fa-solid fa-times text-2xl"></i>
+                        </button>
+                    </div>
+                    <form id="edit-form" class="space-y-4">
+            `;
+            
+            // Orijinal row'u sakla (değişiklik kontrolü için)
+            const originalRow = JSON.parse(JSON.stringify(row));
+            
+            // İK kullanıcıları için düzenlenebilir kolonları belirle
+            // Employee view'leri için sadece Salary/HourlySalary, Manager ve Department kolonları düzenlenebilir
+            const isEmployeeView = tableName.includes('SalariedEmployees') || tableName.includes('Technician');
+            const editableColumns = [];
+            if (isEmployeeView && isHR) {
+                // Salary veya HourlySalary kolonunu bul
+                Object.keys(row).forEach(key => {
+                    const keyLower = key.toLowerCase();
+                    if (keyLower.includes('salary') || keyLower.includes('hourly')) {
+                        editableColumns.push(key);
+                    }
+                    // Manager kolonunu bul (ManagerFirstName, ManagerName, Manager, vb.)
+                    if (keyLower.includes('manager')) {
+                        editableColumns.push(key);
+                    }
+                    // Department kolonunu bul (sadece kadrolu çalışanlar için)
+                    if (keyLower.includes('department') && tableName.includes('SalariedEmployees')) {
+                        editableColumns.push(key);
+                    }
+                });
+            }
+            
+            // Her kolon için input oluştur
+            Object.keys(row).forEach(key => {
+                let value = row[key] !== null && row[key] !== undefined ? row[key] : '';
+                
+                // Tarih formatını düzelt (SQL Server'dan gelen farklı formatları YYYY-MM-DD'ye çevir)
+                let isDate = false;
+                let dateValue = '';
+                
+                if (value) {
+                    // Farklı tarih formatlarını kontrol et
+                    // YYYY-MM-DD veya YYYY-MM-DD HH:MM:SS
+                    const isoDateMatch = String(value).match(/^(\d{4}-\d{2}-\d{2})/);
+                    // MM/DD/YYYY veya MM.DD.YYYY
+                    const usDateMatch = String(value).match(/^(\d{1,2})[\/\.](\d{1,2})[\/\.](\d{4})/);
+                    // DD/MM/YYYY veya DD.MM.YYYY
+                    const euDateMatch = String(value).match(/^(\d{1,2})[\/\.](\d{1,2})[\/\.](\d{4})/);
+                    
+                    if (isoDateMatch) {
+                        // Zaten ISO formatında
+                        isDate = true;
+                        dateValue = isoDateMatch[1];
+                    } else if (usDateMatch) {
+                        // MM/DD/YYYY formatını YYYY-MM-DD'ye çevir
+                        const month = usDateMatch[1].padStart(2, '0');
+                        const day = usDateMatch[2].padStart(2, '0');
+                        const year = usDateMatch[3];
+                        isDate = true;
+                        dateValue = `${year}-${month}-${day}`;
+                    } else if (euDateMatch) {
+                        // DD/MM/YYYY formatını YYYY-MM-DD'ye çevir
+                        const day = euDateMatch[1].padStart(2, '0');
+                        const month = euDateMatch[2].padStart(2, '0');
+                        const year = euDateMatch[3];
+                        isDate = true;
+                        dateValue = `${year}-${month}-${day}`;
+                    } else if (value instanceof Date) {
+                        // Date objesi
+                        isDate = true;
+                        dateValue = value.toISOString().split('T')[0];
+                    }
+                }
+                
+                // Number kontrolü (string olarak gelen sayıları da kontrol et)
+                const isNumber = !isDate && (typeof value === 'number' || (typeof value === 'string' && value !== '' && !isNaN(value) && !isNaN(parseFloat(value)) && isFinite(value)));
+                
+                // Primary key'i readonly yap
+                const columns = window.currentTableData?.columns || Object.keys(row);
+                const isPrimaryKey = key === columns[0];
+                
+                // İK kullanıcıları için: Employee view'lerinde sadece Salary ve Manager düzenlenebilir
+                const isEditable = !isEmployeeView || !isHR || editableColumns.includes(key);
+                const isReadonly = isPrimaryKey || !isEditable;
+                
+                // Key ve value'yu escape et
+                const escapedKey = escapeHtml(key);
+                const displayValue = isDate ? dateValue : (isNumber ? value : escapeHtml(String(value)));
+                const readonlyClass = isReadonly ? 'bg-slate-50 cursor-not-allowed' : '';
+                const readonlyAttr = isReadonly ? 'readonly' : '';
+                
+                // Department kolonu için dropdown kontrolü
+                const isDepartmentColumn = keyLower.includes('department') && isEmployeeView && isHR && editableColumns.includes(key);
+                
+                formHtml += `
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-slate-700">
+                            ${escapedKey}
+                            ${isPrimaryKey ? ' <span class="text-slate-400">(Primary Key)</span>' : ''}
+                            ${!isEditable && isEmployeeView && isHR ? ' <span class="text-slate-400 text-xs">(Sadece Salary, Manager ve Department düzenlenebilir)</span>' : ''}
+                        </label>
+                        ${isDepartmentColumn ? 
+                            // Department için dropdown
+                            `<select name="${escapedKey}" data-original="${escapeHtml(String(originalRow[key] || ''))}" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none appearance-none bg-white">
+                                <option value="">Departman Seçiniz</option>
+                                ${departmentsList.map(dept => {
+                                    const selected = String(value || '').trim() === String(dept.name || '').trim() ? 'selected' : '';
+                                    return `<option value="${escapeHtml(dept.name)}" ${selected}>${escapeHtml(dept.name)}</option>`;
+                                }).join('')}
+                            </select>` :
+                            isDate ? 
+                            `<input type="date" name="${escapedKey}" value="${dateValue}" data-original="${escapeHtml(String(originalRow[key] || ''))}" ${readonlyAttr} class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none ${readonlyClass}">` :
+                            isNumber ?
+                            `<input type="number" name="${escapedKey}" value="${value}" data-original="${escapeHtml(String(originalRow[key] || ''))}" step="any" ${readonlyAttr} class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none ${readonlyClass}">` :
+                            `<input type="text" name="${escapedKey}" value="${displayValue}" data-original="${escapeHtml(String(originalRow[key] || ''))}" ${readonlyAttr} class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none ${readonlyClass}">`
+                        }
+                    </div>
+                `;
+            });
+            
+            formHtml += `
+                        <div class="flex justify-end space-x-4 pt-4">
+                            <button type="button" onclick="closeEditModal()" class="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-medium">
+                                İptal
+                            </button>
+                            <button type="submit" class="px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-all font-medium">
+                                <i class="fa-solid fa-save mr-2"></i> Kaydet
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            
+            modal.innerHTML = formHtml;
+            document.body.appendChild(modal);
+            
+            // Form submit
+            document.getElementById('edit-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const updateData = {};
+                
+                // İK kullanıcıları için: Employee view'lerinde sadece Salary, Manager ve Department kolonlarını güncelle
+                const isEmployeeView = currentTableName && (currentTableName.includes('SalariedEmployees') || currentTableName.includes('Technician'));
+                const editableColumns = [];
+                if (isEmployeeView && isHR) {
+                    // Salary veya HourlySalary kolonunu bul
+                    Object.keys(row).forEach(key => {
+                        const keyLower = key.toLowerCase();
+                        if (keyLower.includes('salary') || keyLower.includes('hourly')) {
+                            editableColumns.push(key);
+                        }
+                        // Manager kolonunu bul
+                        if (keyLower.includes('manager')) {
+                            editableColumns.push(key);
+                        }
+                        // Department kolonunu bul (sadece kadrolu çalışanlar için)
+                        if (keyLower.includes('department') && currentTableName.includes('SalariedEmployees')) {
+                            editableColumns.push(key);
+                        }
+                    });
+                }
+                
+                // Sadece değişen alanları gönder
+                formData.forEach((value, key) => {
+                    const input = e.target.querySelector(`[name="${key}"]`);
+                    if (!input) return;
+                    
+                    // İK kullanıcıları için: Employee view'lerinde sadece düzenlenebilir kolonları gönder
+                    if (isEmployeeView && isHR && !editableColumns.includes(key)) {
+                        return; // Bu kolon düzenlenemez, atla
+                    }
+                    
+                    const originalValue = input.getAttribute('data-original') || null;
+                    const inputType = input.type || (input.tagName === 'SELECT' ? 'select' : 'text');
+                    const isSelect = input.tagName === 'SELECT';
+                    
+                    // Date input kontrolü
+                    const isDateInput = inputType === 'date';
+                    
+                    // Orijinal değeri parse et
+                    let originalParsed = originalValue;
+                    if (originalValue !== null && originalValue !== '' && !isDateInput) {
+                        // Number kontrolü (date değilse)
+                        const numOriginal = parseFloat(originalValue);
+                        if (!isNaN(numOriginal) && isFinite(numOriginal)) {
+                            originalParsed = numOriginal;
+                        }
+                    }
+                    
+                    // Yeni değeri parse et
+                    let newValue = value;
+                    if (value === '') {
+                        newValue = null;
+                    } else if (isDateInput) {
+                        // Date input ise string olarak bırak (YYYY-MM-DD formatında)
+                        newValue = value;
+                    } else if (isSelect) {
+                        // Select (dropdown) için değeri olduğu gibi kullan
+                        newValue = value;
+                    } else {
+                        // Number kontrolü (date değilse)
+                        const numValue = parseFloat(value);
+                        if (!isNaN(numValue) && isFinite(numValue) && value.trim() !== '') {
+                            newValue = numValue;
+                        }
+                    }
+                    
+                    // Sadece değişen alanları ekle
+                    if (String(originalParsed) !== String(newValue)) {
+                        updateData[key] = newValue;
+                        console.log(`Field changed: ${key} - ${originalParsed} -> ${newValue} (type: ${inputType})`);
+                    }
+                });
+                
+                // Hiçbir alan değişmemişse uyarı ver
+                if (Object.keys(updateData).length === 0) {
+                    alert('Hiçbir alan değiştirilmedi.');
+                    return;
+                }
+                
+                console.log('Fields to update:', updateData);
+                await updateRecord(tableName, row, updateData);
+            });
+        }
+        
+        function closeEditModal() {
+            const modal = document.getElementById('edit-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+        
+        // Update record fonksiyonu
+        async function updateRecord(tableName, oldRow, newData) {
+            try {
+                console.log('Updating record:', { tableName, oldRow, newData });
+                
+                const response = await fetch(`/api/tables/update/${currentSchema}/${tableName}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        old_data: oldRow,
+                        new_data: newData
+                    })
+                });
+                
+                const responseData = await response.json();
+                console.log('Update response:', response.status, responseData);
+                
+                if (response.ok) {
+                    // Başarılı, modal'ı kapat ve tabloyu yeniden yükle
+                    closeEditModal();
+                    loadTableData(currentSchema, currentTableName, currentFullName, document.getElementById('search-input')?.value || '');
+                } else {
+                    alert(`Hata: ${responseData.detail || 'Güncelleme başarısız'}`);
+                }
+            } catch (error) {
+                console.error('Update error:', error);
+                alert('Güncelleme sırasında bir hata oluştu: ' + error.message);
+            }
+        }
+        
+        // Delete record fonksiyonu
+        function deleteRecord(tableName, rowData) {
+            // Row data'yı decode et (Unicode-safe)
+            let row;
+            try {
+                if (typeof rowData === 'string') {
+                    const decoded = decodeURIComponent(escape(atob(rowData)));
+                    row = JSON.parse(decoded);
+                } else {
+                    row = rowData;
+                }
+            } catch (e) {
+                console.error('Error parsing row data:', e);
+                alert('Kayıt verisi okunamadı: ' + e.message);
+                return;
+            }
+            
+            console.log('Delete record:', tableName, row);
+            
+            // Onay iste
+            if (!confirm('Bu kaydı silmek istediğinizden emin misiniz?')) {
+                return;
+            }
+            
+            // TODO: Delete endpoint'i eklenmeli
+            alert('Silme işlemi henüz implement edilmedi. Lütfen backend\'de delete endpoint\'i ekleyin.');
+        }
+
+        // Offer Form Fonksiyonları
+        let currentOfferNo = null;
+        let customersList = [];
+        let productsList = [];
+        
+        async function loadCustomers() {
+            try {
+                const response = await fetch('/api/tables/offers/customers', {
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    customersList = data.customers || [];
+                }
+            } catch (error) {
+                console.error('Error loading customers:', error);
+            }
+        }
+        
+        async function loadProducts() {
+            try {
+                const response = await fetch('/api/tables/offers/products', {
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    productsList = data.products || [];
+                }
+            } catch (error) {
+                console.error('Error loading products:', error);
+            }
+        }
+        
+        async function showOfferForm() {
+            // Sidebar link'lerini temizle
+            document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active-link'));
+            document.getElementById('create-offer-link').classList.add('active-link');
+            
+            // Arama kutusunu gizle
+            document.getElementById('search-container').classList.add('hidden');
+            
+            // Table content'i gizle
+            document.getElementById('table-content').classList.add('hidden');
+            
+            // Diğer form container'ları gizle
+            document.getElementById('inventory-form-container').classList.add('hidden');
+            document.getElementById('product-form-container').classList.add('hidden');
+            
+            // Offer form container'ı göster
+            const formContainer = document.getElementById('offer-form-container');
+            formContainer.classList.remove('hidden');
+            
+            // Başlık güncelle
+            document.getElementById('section-title').textContent = 'Forms';
+            document.getElementById('section-desc').textContent = 'Create Offer';
+            
+            // Müşteri ve ürün listelerini yükle
+            if (customersList.length === 0) {
+                await loadCustomers();
+            }
+            if (productsList.length === 0) {
+                await loadProducts();
+            }
+            
+            // Form'u göster (Step 1: Offer oluşturma)
+            showOfferStep1();
+        }
+        
+        function showOfferStep1() {
+            const formContainer = document.getElementById('offer-form-container');
+            
+            formContainer.innerHTML = `
+                <div class="p-12">
+                    <h2 class="text-3xl font-black text-slate-800 mb-2">Create Offer</h2>
+                    <p class="text-slate-500 mb-8">Step 1: Offer bilgilerini girin</p>
+                    
+                    <form id="offer-form-step1" class="space-y-6">
+                        <div class="grid grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="text-sm font-bold text-slate-700">Customer <span class="text-red-500">*</span></label>
+                                <select name="customer_id" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                                    <option value="">Müşteri Seçiniz</option>
+                                    ${customersList.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}
+                                </select>
+                            </div>
+                            
+                            <div class="space-y-2">
+                                <label class="text-sm font-bold text-slate-700">Exchange Rate <span class="text-red-500">*</span></label>
+                                <input type="number" name="exchange_rate" step="0.0001" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none" placeholder="Döviz Kuru">
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="text-sm font-bold text-slate-700">Payment Term <span class="text-red-500">*</span></label>
+                                <input type="date" name="payment_term" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                            </div>
+                            
+                            <div class="space-y-2">
+                                <label class="text-sm font-bold text-slate-700">Term <span class="text-red-500">*</span></label>
+                                <input type="text" name="term" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none" placeholder="Vade Açıklaması">
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-end space-x-4 pt-4">
+                            <button type="button" onclick="hideOfferForm()" class="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-medium">
+                                İptal
+                            </button>
+                            <button type="submit" class="px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-all font-medium">
+                                <i class="fa-solid fa-arrow-right mr-2"></i> Next: Add Products
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            
+            // Form submit handler
+            document.getElementById('offer-form-step1').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await createOfferStep1(e.target);
+            });
+        }
+        
+        async function createOfferStep1(form) {
+            const formData = new FormData(form);
+            
+            try {
+                const response = await fetch('/api/tables/offers/create-step1', {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: formData
+                });
+                
+                // Response'un başarılı olup olmadığını kontrol et
+                if (!response.ok) {
+                    // 401 veya 403 hatası durumunda login sayfasına yönlendirme yapma
+                    if (response.status === 401 || response.status === 403) {
+                        let errorMessage = 'Yetkiniz yok veya oturumunuz sona ermiş.';
+                        try {
+                            const errorData = await response.json();
+                            errorMessage = errorData.detail || errorMessage;
+                        } catch (e) {
+                            // JSON parse edilemezse sadece status code'u kullan
+                        }
+                        alert(errorMessage);
+                        return;
+                    }
+                    
+                    // Diğer hatalar için
+                    let errorMessage = 'Teklif oluşturulamadı';
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.detail || errorMessage;
+                    } catch (e) {
+                        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                    }
+                    alert(`Hata: ${errorMessage}`);
+                    return;
+                }
+                
+                const data = await response.json();
+                currentOfferNo = data.offer_no;
+                showOfferStep2();
+            } catch (error) {
+                console.error('Error creating offer:', error);
+                alert('Teklif oluşturulurken bir hata oluştu: ' + error.message);
+            }
+        }
+        
+        function showOfferStep2() {
+            const formContainer = document.getElementById('offer-form-container');
+            
+            formContainer.innerHTML = `
+                <div class="p-12">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 class="text-3xl font-black text-slate-800 mb-2">Create Offer</h2>
+                            <p class="text-slate-500">Step 2: Ürünleri ekleyin (Offer No: ${currentOfferNo})</p>
+                        </div>
+                        <button onclick="showOfferStep1()" class="px-4 py-2 text-sky-600 hover:text-sky-700 font-medium">
+                            <i class="fa-solid fa-arrow-left mr-2"></i> Geri
+                        </button>
+                    </div>
+                    
+                    <div id="offer-lines-list" class="mb-6 space-y-4">
+                        <!-- Eklenen ürünler buraya gelecek -->
+                        <p class="text-slate-400 text-center py-8">Henüz ürün eklenmedi</p>
+                    </div>
+                    
+                    <form id="offer-line-form" class="bg-slate-50 rounded-2xl p-6 mb-6">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4">Yeni Ürün Ekle</h3>
+                        <div class="grid grid-cols-4 gap-4">
+                            <div class="space-y-2">
+                                <label class="text-sm font-bold text-slate-700">Product Code <span class="text-red-500">*</span></label>
+                                <select name="product_code" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none bg-white">
+                                    <option value="">Ürün Seçiniz</option>
+                                    ${productsList.map(p => `<option value="${escapeHtml(p.code)}">${escapeHtml(p.code)} - ${escapeHtml(p.description)}</option>`).join('')}
+                                </select>
+                            </div>
+                            
+                            <div class="space-y-2">
+                                <label class="text-sm font-bold text-slate-700">Quantity <span class="text-red-500">*</span></label>
+                                <input type="number" name="quantity" min="1" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none bg-white" placeholder="Miktar">
+                            </div>
+                            
+                            <div class="space-y-2">
+                                <label class="text-sm font-bold text-slate-700">Sales Unit Price <span class="text-red-500">*</span></label>
+                                <input type="number" name="sales_unit_price" step="0.01" min="0" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none bg-white" placeholder="Birim Fiyat">
+                            </div>
+                            
+                            <div class="space-y-2 flex items-end">
+                                <button type="submit" class="w-full px-4 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-all font-medium">
+                                    <i class="fa-solid fa-plus mr-2"></i> Add Product
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <div class="flex justify-end space-x-4 pt-4 border-t border-slate-200">
+                        <button onclick="hideOfferForm()" class="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-medium">
+                            İptal
+                        </button>
+                        <button onclick="finishOffer()" class="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all font-medium">
+                            <i class="fa-solid fa-check mr-2"></i> Finish Offer
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Form submit handler
+            document.getElementById('offer-line-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await addOfferLine(e.target);
+            });
+            
+            // Mevcut offer line'ları yükle
+            refreshOfferLines();
+        }
+        
+        async function addOfferLine(form) {
+            const formData = new FormData(form);
+            
+            try {
+                const response = await fetch(`/api/tables/offers/${currentOfferNo}/offerlines`, {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: formData
+                });
+                
+                // Response'un başarılı olup olmadığını kontrol et
+                if (!response.ok) {
+                    // 401 veya 403 hatası durumunda login sayfasına yönlendirme yapma
+                    if (response.status === 401 || response.status === 403) {
+                        let errorMessage = 'Yetkiniz yok veya oturumunuz sona ermiş.';
+                        try {
+                            const errorData = await response.json();
+                            errorMessage = errorData.detail || errorMessage;
+                        } catch (e) {
+                            // JSON parse edilemezse sadece status code'u kullan
+                        }
+                        alert(errorMessage);
+                        return;
+                    }
+                    
+                    // Diğer hatalar için
+                    let errorMessage = 'Ürün eklenemedi';
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.detail || errorMessage;
+                    } catch (e) {
+                        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                    }
+                    alert(`Hata: ${errorMessage}`);
+                    return;
+                }
+                
+                const data = await response.json();
+                
+                // Form'u temizle
+                form.reset();
+                
+                // Ürün listesini güncelle
+                await refreshOfferLines();
+            } catch (error) {
+                console.error('Error adding offer line:', error);
+                alert('Ürün eklenirken bir hata oluştu: ' + error.message);
+            }
+        }
+        
+        async function refreshOfferLines() {
+            if (!currentOfferNo) return;
+            
+            // OfferLine'ları getir ve göster
+            try {
+                // OfferNo'ya göre filtreleme için search kullan
+                const response = await fetch(`/api/tables/dbo/vw_OfferLineDetails/data?limit=1000&offset=0`, {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    // 401 veya 403 hatası durumunda sessizce devam et
+                    if (response.status === 401 || response.status === 403) {
+                        console.warn('Yetki hatası: Offer line\'lar yüklenemedi');
+                        return;
+                    }
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                // OfferNo'ya göre filtrele
+                const offerLines = data.data.filter(line => line.OfferNo == currentOfferNo);
+                
+                const listContainer = document.getElementById('offer-lines-list');
+                if (!listContainer) return;
+                
+                if (offerLines.length > 0) {
+                        listContainer.innerHTML = `
+                            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                                <div class="p-4 bg-slate-50 border-b border-slate-200">
+                                    <h4 class="font-bold text-slate-800">Eklenen Ürünler (${offerLines.length})</h4>
+                                </div>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full">
+                                        <thead class="bg-slate-50 border-b border-slate-200">
+                                            <tr>
+                                                <th class="px-6 py-4 text-left text-xs font-black text-slate-400 uppercase">Product Code</th>
+                                                <th class="px-6 py-4 text-left text-xs font-black text-slate-400 uppercase">Product Description</th>
+                                                <th class="px-6 py-4 text-left text-xs font-black text-slate-400 uppercase">Quantity</th>
+                                                <th class="px-6 py-4 text-left text-xs font-black text-slate-400 uppercase">Sales Unit Price</th>
+                                                <th class="px-6 py-4 text-left text-xs font-black text-slate-400 uppercase">Sales Total Price</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-100">
+                                            ${offerLines.map(line => `
+                                                <tr>
+                                                    <td class="px-6 py-4 font-medium text-slate-700">${escapeHtml(String(line.ProductCode || ''))}</td>
+                                                    <td class="px-6 py-4 text-slate-600">${escapeHtml(String(line.ProductDescription || ''))}</td>
+                                                    <td class="px-6 py-4 text-slate-600">${line.Quantity || ''}</td>
+                                                    <td class="px-6 py-4 text-slate-600">${line.SalesUnitPrice || ''}</td>
+                                                    <td class="px-6 py-4 font-bold text-sky-600">${line.SalesTotalPrice || ''}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        `;
+                } else {
+                    listContainer.innerHTML = '<p class="text-slate-400 text-center py-8">Henüz ürün eklenmedi</p>';
+                }
+            } catch (error) {
+                console.error('Error refreshing offer lines:', error);
+            }
+        }
+        
+        function finishOffer() {
+            alert(`Offer ${currentOfferNo} başarıyla oluşturuldu!`);
+            hideOfferForm();
+            // Offer view'ünü göster
+            const offerLink = Array.from(document.querySelectorAll('.sidebar-link')).find(link => 
+                link.textContent.includes('Offers') || link.textContent.includes('Offer')
+            );
+            if (offerLink) {
+                offerLink.click();
+            } else {
+                loadTableData('dbo', 'vw_OfferSummary', 'dbo.vw_OfferSummary');
+            }
+        }
+        
+        function hideOfferForm() {
+            // Sidebar link'lerini temizle
+            document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active-link'));
+            
+            document.getElementById('offer-form-container').classList.add('hidden');
+            document.getElementById('inventory-form-container').classList.add('hidden');
+            document.getElementById('product-form-container').classList.add('hidden');
+            document.getElementById('table-content').classList.remove('hidden');
+            document.getElementById('section-title').textContent = 'Select a Table';
+            document.getElementById('section-desc').textContent = 'Choose a table from the sidebar to view its data';
+            currentOfferNo = null;
+        }
+        
+        async function showInventoryForm() {
+            // Sidebar link'lerini temizle
+            document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active-link'));
+            document.getElementById('create-inventory-link').classList.add('active-link');
+            
+            // Arama kutusunu gizle
+            document.getElementById('search-container').classList.add('hidden');
+            
+            // Table content'i ve diğer form container'ları gizle
+            document.getElementById('table-content').classList.add('hidden');
+            document.getElementById('offer-form-container').classList.add('hidden');
+            document.getElementById('product-form-container').classList.add('hidden');
+            
+            // Inventory form container'ı göster
+            const formContainer = document.getElementById('inventory-form-container');
+            formContainer.classList.remove('hidden');
+            
+            // Başlık güncelle
+            document.getElementById('section-title').textContent = 'Forms';
+            document.getElementById('section-desc').textContent = 'Add Product Inventory';
+            
+            formContainer.innerHTML = `
+                <div class="p-12">
+                    <h2 class="text-3xl font-black text-slate-800 mb-2">Add Product Inventory</h2>
+                    <p class="text-slate-500 mb-8">Yeni ürün envanteri ekleyin</p>
+                    
+                    <form id="inventory-form" class="space-y-6">
+                        <div class="grid grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="text-sm font-bold text-slate-700">Product Code <span class="text-red-500">*</span></label>
+                                <input type="text" name="product_code" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none" placeholder="Örn: SRV-001">
+                            </div>
+                            
+                            <div class="space-y-2">
+                                <label class="text-sm font-bold text-slate-700">Product Type <span class="text-red-500">*</span></label>
+                                <select name="product_type" id="product-type-select" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none" onchange="toggleInventoryFields()">
+                                    <option value="">Seçiniz</option>
+                                    <option value="Server">Server</option>
+                                    <option value="Storage">Storage</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <label class="text-sm font-bold text-slate-700">Product Description <span class="text-red-500">*</span></label>
+                            <input type="text" name="product_description" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none" placeholder="Ürün açıklaması">
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="text-sm font-bold text-slate-700">Purchase Unit Price <span class="text-red-500">*</span></label>
+                                <input type="number" name="purchase_unit_price" step="0.01" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none" placeholder="0.00">
+                            </div>
+                            
+                            <!-- Available Stock artık trigger'lar ile otomatik belirlenecek -->
+                        </div>
+                        
+                        <!-- Server Specific Fields -->
+                        <div id="server-fields" class="hidden space-y-6">
+                            <h3 class="text-lg font-bold text-slate-700 border-b pb-2">Server Specifications</h3>
+                            <div class="grid grid-cols-3 gap-6">
+                                <div class="space-y-2">
+                                    <label class="text-sm font-bold text-slate-700">CPU <span class="text-red-500">*</span></label>
+                                    <input type="number" name="cpu" min="1" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none" placeholder="Örn: 8">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-sm font-bold text-slate-700">RAM (GB) <span class="text-red-500">*</span></label>
+                                    <input type="number" name="ram" min="1" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none" placeholder="Örn: 32">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-sm font-bold text-slate-700">Disk <span class="text-red-500">*</span></label>
+                                    <input type="text" name="disk" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none" placeholder="Örn: 1TB SSD">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Storage Specific Fields -->
+                        <div id="storage-fields" class="hidden space-y-6">
+                            <h3 class="text-lg font-bold text-slate-700 border-b pb-2">Storage Specifications</h3>
+                            <div class="grid grid-cols-3 gap-6">
+                                <div class="space-y-2">
+                                    <label class="text-sm font-bold text-slate-700">Disk Type <span class="text-red-500">*</span></label>
+                                    <select name="disk_type" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                                        <option value="">Seçiniz</option>
+                                        <option value="SSD">SSD</option>
+                                        <option value="SAS">SAS</option>
+                                        <option value="HDD">HDD</option>
+                                    </select>
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-sm font-bold text-slate-700">Disk Space <span class="text-red-500">*</span></label>
+                                    <input type="text" name="disk_space" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none" placeholder="Örn: 2TiB">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-sm font-bold text-slate-700">Disk Count <span class="text-red-500">*</span></label>
+                                    <input type="number" name="disk_count" min="0" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none" placeholder="Örn: 12">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-end space-x-4 pt-4">
+                            <button type="button" onclick="hideInventoryForm()" class="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-medium">
+                                İptal
+                            </button>
+                            <button type="submit" class="px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-all font-medium">
+                                <i class="fa-solid fa-plus mr-2"></i> Create Inventory
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            
+            // Form submit handler
+            document.getElementById('inventory-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await createInventory(e.target);
+            });
+        }
+        
+        function toggleInventoryFields() {
+            const productType = document.getElementById('product-type-select').value;
+            const serverFields = document.getElementById('server-fields');
+            const storageFields = document.getElementById('storage-fields');
+            
+            serverFields.classList.add('hidden');
+            storageFields.classList.add('hidden');
+            
+            if (productType === 'Server') {
+                serverFields.classList.remove('hidden');
+            } else if (productType === 'Storage') {
+                storageFields.classList.remove('hidden');
+            }
+        }
+        
+        async function createInventory(form) {
+            const formData = new FormData(form);
+            
+            try {
+                const response = await fetch('/employee/inventory/create', {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('Envanter başarıyla oluşturuldu!');
+                    form.reset();
+                    toggleInventoryFields();
+                } else {
+                    alert(`Hata: ${data.detail || 'Envanter oluşturulamadı'}`);
+                }
+            } catch (error) {
+                console.error('Error creating inventory:', error);
+                alert('Envanter oluşturulurken bir hata oluştu: ' + error.message);
+            }
+        }
+        
+        function hideInventoryForm() {
+            document.getElementById('inventory-form-container').classList.add('hidden');
+            document.getElementById('table-content').classList.remove('hidden');
+            document.getElementById('create-inventory-link').classList.remove('active-link');
+            document.getElementById('section-title').textContent = 'Select a Table';
+            document.getElementById('section-desc').textContent = 'Choose a table from the sidebar to view its data';
+        }
+        
+        async function showProductForm() {
+            // Sidebar link'lerini temizle
+            document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active-link'));
+            document.getElementById('create-product-link').classList.add('active-link');
+            
+            // Arama kutusunu gizle
+            document.getElementById('search-container').classList.add('hidden');
+            
+            // Table content'i ve diğer form container'ları gizle
+            document.getElementById('table-content').classList.add('hidden');
+            document.getElementById('offer-form-container').classList.add('hidden');
+            document.getElementById('inventory-form-container').classList.add('hidden');
+            
+            // Product form container'ı göster
+            const formContainer = document.getElementById('product-form-container');
+            formContainer.classList.remove('hidden');
+            
+            // Başlık güncelle
+            document.getElementById('section-title').textContent = 'Forms';
+            document.getElementById('section-desc').textContent = 'Add Product';
+            
+            // ProductInventory listesini yükle
+            let inventoryList = [];
+            try {
+                const response = await fetch('/api/tables/dbo/ProductInventory/data?limit=1000&offset=0', {
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    inventoryList = data.data || [];
+                }
+            } catch (error) {
+                console.error('Error loading inventory:', error);
+            }
+            
+            formContainer.innerHTML = `
+                <div class="p-12">
+                    <h2 class="text-3xl font-black text-slate-800 mb-2">Add Product</h2>
+                    <p class="text-slate-500 mb-8">Yeni ürün ekleyin</p>
+                    
+                    <form id="product-form" class="space-y-6">
+                        <div class="grid grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="text-sm font-bold text-slate-700">Serial Number <span class="text-red-500">*</span></label>
+                                <input type="text" name="serial_number" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none" placeholder="Örn: SN-001">
+                            </div>
+                            
+                            <div class="space-y-2">
+                                <label class="text-sm font-bold text-slate-700">Product Code <span class="text-red-500">*</span></label>
+                                <select name="product_code" id="product-code-select" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none" onchange="toggleProductFields()">
+                                    <option value="">Seçiniz</option>
+                                    ${inventoryList.map(inv => `<option value="${inv.ProductCode}" data-type="${inv.ProductType || 'Other'}">${inv.ProductCode} - ${inv.ProductDescription || ''}</option>`).join('')}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="text-sm font-bold text-slate-700">Name <span class="text-red-500">*</span></label>
+                                <input type="text" name="name" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none" placeholder="Ürün adı">
+                            </div>
+                            
+                            <div class="space-y-2">
+                                <label class="text-sm font-bold text-slate-700">Mac Address <span class="text-red-500">*</span></label>
+                                <input type="text" name="mac_address" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none" placeholder="AA:BB:CC:DD:EE:FF">
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="text-sm font-bold text-slate-700">Firmware Version <span class="text-red-500">*</span></label>
+                                <input type="text" name="firmware_version" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none" placeholder="v1.0">
+                            </div>
+                            
+                            <div class="space-y-2">
+                                <label class="text-sm font-bold text-slate-700">Product Type</label>
+                                <input type="text" id="product-type-display" readonly class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 text-slate-500" placeholder="Product Code seçildiğinde otomatik">
+                            </div>
+                        </div>
+                        
+                        <!-- Server Specific Fields -->
+                        <div id="product-server-fields" class="hidden space-y-6">
+                            <h3 class="text-lg font-bold text-slate-700 border-b pb-2">Server Details</h3>
+                            <div class="grid grid-cols-3 gap-6">
+                                <div class="space-y-2">
+                                    <label class="text-sm font-bold text-slate-700">IP Address <span class="text-red-500">*</span></label>
+                                    <input type="text" name="ip_address" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none" placeholder="192.168.1.1">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-sm font-bold text-slate-700">Operating System</label>
+                                    <input type="text" name="operating_system" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none" placeholder="Windows Server 2022">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-sm font-bold text-slate-700">Service <span class="text-red-500">*</span></label>
+                                    <input type="text" name="service" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none" placeholder="Database">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Storage Specific Fields -->
+                        <div id="product-storage-fields" class="hidden space-y-6">
+                            <h3 class="text-lg font-bold text-slate-700 border-b pb-2">Storage Details</h3>
+                            <div class="grid grid-cols-2 gap-6">
+                                <div class="space-y-2">
+                                    <label class="text-sm font-bold text-slate-700">Management IP 1 <span class="text-red-500">*</span></label>
+                                    <input type="text" name="mgmt_ip1" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none" placeholder="192.168.1.1">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-sm font-bold text-slate-700">Management IP 2 <span class="text-red-500">*</span></label>
+                                    <input type="text" name="mgmt_ip2" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none" placeholder="192.168.1.2">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-sm font-bold text-slate-700">Service IP 1 <span class="text-red-500">*</span></label>
+                                    <input type="text" name="service_ip1" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none" placeholder="10.0.0.1">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-sm font-bold text-slate-700">Service IP 2 <span class="text-red-500">*</span></label>
+                                    <input type="text" name="service_ip2" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none" placeholder="10.0.0.2">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-sm font-bold text-slate-700">LUN <span class="text-red-500">*</span></label>
+                                    <input type="text" name="lun" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none" placeholder="LUN-001">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-sm font-bold text-slate-700">Capacity (GB) <span class="text-red-500">*</span></label>
+                                    <input type="number" name="capacity" min="1" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none" placeholder="1000">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-end space-x-4 pt-4">
+                            <button type="button" onclick="hideProductForm()" class="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-medium">
+                                İptal
+                            </button>
+                            <button type="submit" class="px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-all font-medium">
+                                <i class="fa-solid fa-plus mr-2"></i> Create Product
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            
+            // Form submit handler
+            document.getElementById('product-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await createProduct(e.target);
+            });
+        }
+        
+        function toggleProductFields() {
+            const productCodeSelect = document.getElementById('product-code-select');
+            const selectedOption = productCodeSelect.options[productCodeSelect.selectedIndex];
+            const productType = selectedOption ? selectedOption.getAttribute('data-type') : '';
+            
+            const serverFields = document.getElementById('product-server-fields');
+            const storageFields = document.getElementById('product-storage-fields');
+            const typeDisplay = document.getElementById('product-type-display');
+            
+            serverFields.classList.add('hidden');
+            storageFields.classList.add('hidden');
+            typeDisplay.value = productType || '';
+            
+            if (productType === 'Server') {
+                serverFields.classList.remove('hidden');
+            } else if (productType === 'Storage') {
+                storageFields.classList.remove('hidden');
+            }
+        }
+        
+        async function createProduct(form) {
+            const formData = new FormData(form);
+            
+            // Product type'ı product code'dan al
+            const productCodeSelect = document.getElementById('product-code-select');
+            const selectedOption = productCodeSelect.options[productCodeSelect.selectedIndex];
+            const productType = selectedOption ? selectedOption.getAttribute('data-type') : 'Other';
+            formData.append('product_type', productType);
+            
+            try {
+                const response = await fetch('/employee/product/create', {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('Ürün başarıyla oluşturuldu!');
+                    form.reset();
+                    toggleProductFields();
+                } else {
+                    alert(`Hata: ${data.detail || 'Ürün oluşturulamadı'}`);
+                }
+            } catch (error) {
+                console.error('Error creating product:', error);
+                alert('Ürün oluşturulurken bir hata oluştu: ' + error.message);
+            }
+        }
+        
+        function hideProductForm() {
+            document.getElementById('product-form-container').classList.add('hidden');
+            document.getElementById('table-content').classList.remove('hidden');
+            document.getElementById('create-product-link').classList.remove('active-link');
+            document.getElementById('section-title').textContent = 'Select a Table';
+            document.getElementById('section-desc').textContent = 'Choose a table from the sidebar to view its data';
+        }
+        
+        // ========== CUSTOMER İŞLEVLERİ ==========
+        
+        async function loadCustomerOrders() {
+            try {
+                document.getElementById('section-title').textContent = 'Orders';
+                document.getElementById('section-desc').textContent = 'Siparişleriniz';
+                document.getElementById('search-container').classList.add('hidden');
+                document.getElementById('offer-form-container').classList.add('hidden');
+                document.getElementById('inventory-form-container').classList.add('hidden');
+                document.getElementById('product-form-container').classList.add('hidden');
+                document.getElementById('table-content').classList.remove('hidden');
+                
+                const response = await fetch('/customer/orders', {
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const html = await response.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    // max-w-7xl container'ını al (tüm içeriği içerir)
+                    const contentContainer = doc.querySelector('.max-w-7xl.mx-auto.px-6.py-8');
+                    
+                    if (contentContainer) {
+                        document.getElementById('table-content').innerHTML = contentContainer.outerHTML;
+                        attachCustomerOrderListeners();
+                    } else {
+                        // Fallback: tüm body içeriğini al
+                        const bodyContent = doc.querySelector('body > div');
+                        if (bodyContent) {
+                            document.getElementById('table-content').innerHTML = bodyContent.innerHTML;
+                            attachCustomerOrderListeners();
+                        }
+                    }
+                } else {
+                    throw new Error('Orders yüklenemedi');
+                }
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                document.getElementById('table-content').innerHTML = '<div class="p-12 text-center text-red-500">Orders yüklenirken hata oluştu</div>';
+            }
+        }
+        
+        async function loadCustomerOffers() {
+            try {
+                document.getElementById('section-title').textContent = 'Offers';
+                document.getElementById('section-desc').textContent = 'Teklifleriniz';
+                document.getElementById('search-container').classList.add('hidden');
+                document.getElementById('offer-form-container').classList.add('hidden');
+                document.getElementById('inventory-form-container').classList.add('hidden');
+                document.getElementById('product-form-container').classList.add('hidden');
+                document.getElementById('table-content').classList.remove('hidden');
+                
+                const response = await fetch('/customer/offers', {
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const html = await response.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    // max-w-7xl container'ını al (tüm içeriği içerir)
+                    const contentContainer = doc.querySelector('.max-w-7xl.mx-auto.px-6.py-8');
+                    
+                    if (contentContainer) {
+                        document.getElementById('table-content').innerHTML = contentContainer.outerHTML;
+                        attachCustomerOfferListeners();
+                    } else {
+                        // Fallback: tüm body içeriğini al
+                        const bodyContent = doc.querySelector('body > div');
+                        if (bodyContent) {
+                            document.getElementById('table-content').innerHTML = bodyContent.innerHTML;
+                            attachCustomerOfferListeners();
+                        }
+                    }
+                } else {
+                    throw new Error('Offers yüklenemedi');
+                }
+            } catch (error) {
+                console.error('Error loading offers:', error);
+                document.getElementById('table-content').innerHTML = '<div class="p-12 text-center text-red-500">Offers yüklenirken hata oluştu</div>';
+            }
+        }
+        
+        async function loadCustomerRepairRequests() {
+            try {
+                document.getElementById('section-title').textContent = 'Repair Requests';
+                document.getElementById('section-desc').textContent = 'Tamir talepleriniz';
+                document.getElementById('search-container').classList.add('hidden');
+                document.getElementById('offer-form-container').classList.add('hidden');
+                document.getElementById('inventory-form-container').classList.add('hidden');
+                document.getElementById('product-form-container').classList.add('hidden');
+                document.getElementById('table-content').classList.remove('hidden');
+                
+                const response = await fetch('/customer/repair-requests', {
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const html = await response.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    // max-w-7xl container'ını al (tüm içeriği içerir)
+                    const contentContainer = doc.querySelector('.max-w-7xl.mx-auto.px-6.py-8');
+                    
+                    if (contentContainer) {
+                        document.getElementById('table-content').innerHTML = contentContainer.outerHTML;
+                        attachCustomerRepairListeners();
+                    } else {
+                        // Fallback: tüm body içeriğini al
+                        const bodyContent = doc.querySelector('body > div');
+                        if (bodyContent) {
+                            document.getElementById('table-content').innerHTML = bodyContent.innerHTML;
+                            attachCustomerRepairListeners();
+                        }
+                    }
+                } else {
+                    throw new Error('Repair requests yüklenemedi');
+                }
+            } catch (error) {
+                console.error('Error loading repair requests:', error);
+                document.getElementById('table-content').innerHTML = '<div class="p-12 text-center text-red-500">Repair requests yüklenirken hata oluştu</div>';
+            }
+        }
+        
+        async function loadCustomerProducts() {
+            try {
+                document.getElementById('section-title').textContent = 'Ürünlerim';
+                document.getElementById('section-desc').textContent = 'Sahip olduğunuz ürünler';
+                document.getElementById('search-container').classList.add('hidden');
+                document.getElementById('offer-form-container').classList.add('hidden');
+                document.getElementById('inventory-form-container').classList.add('hidden');
+                document.getElementById('product-form-container').classList.add('hidden');
+                document.getElementById('table-content').classList.remove('hidden');
+                
+                // Loading göster
+                document.getElementById('table-content').innerHTML = '<div class="p-12 text-center"><i class="fa-solid fa-spinner fa-spin text-4xl text-sky-500"></i><p class="mt-4 text-slate-400">Ürünler yükleniyor...</p></div>';
+                
+                const response = await fetch('/customer/products', {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Products response error:', response.status, errorText);
+                    throw new Error(`Ürünler yüklenemedi (${response.status})`);
+                }
+                
+                const html = await response.text();
+                console.log('Products HTML length:', html.length);
+                
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Önce max-w-7xl container'ını ara
+                let contentContainer = doc.querySelector('.max-w-7xl.mx-auto.px-6.py-8');
+                
+                if (!contentContainer) {
+                    // Fallback: body içindeki ilk div'i al
+                    contentContainer = doc.querySelector('body > div');
+                }
+                
+                if (!contentContainer) {
+                    // Son fallback: tüm body içeriğini al
+                    contentContainer = doc.body;
+                }
+                
+                if (contentContainer) {
+                    document.getElementById('table-content').innerHTML = contentContainer.innerHTML;
+                } else {
+                    throw new Error('İçerik bulunamadı');
+                }
+            } catch (error) {
+                console.error('Error loading customer products:', error);
+                document.getElementById('table-content').innerHTML = `
+                    <div class="p-12 text-center text-red-500">
+                        <i class="fa-solid fa-exclamation-triangle text-4xl mb-4"></i>
+                        <p class="text-lg font-medium">Ürünler yüklenirken hata oluştu</p>
+                        <p class="text-sm text-slate-400 mt-2">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadCustomerFeedback() {
+            try {
+                document.getElementById('section-title').textContent = 'Feedback';
+                document.getElementById('section-desc').textContent = 'Feedbackleriniz';
+                document.getElementById('search-container').classList.add('hidden');
+                document.getElementById('offer-form-container').classList.add('hidden');
+                document.getElementById('inventory-form-container').classList.add('hidden');
+                document.getElementById('product-form-container').classList.add('hidden');
+                document.getElementById('table-content').classList.remove('hidden');
+                
+                const response = await fetch('/customer/feedback', {
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const html = await response.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    // max-w-7xl container'ını al (tüm içeriği içerir)
+                    const contentContainer = doc.querySelector('.max-w-7xl.mx-auto.px-6.py-8');
+                    
+                    if (contentContainer) {
+                        document.getElementById('table-content').innerHTML = contentContainer.outerHTML;
+                        attachCustomerFeedbackListeners();
+                    } else {
+                        // Fallback: tüm body içeriğini al
+                        const bodyContent = doc.querySelector('body > div');
+                        if (bodyContent) {
+                            document.getElementById('table-content').innerHTML = bodyContent.innerHTML;
+                            attachCustomerFeedbackListeners();
+                        }
+                    }
+                } else {
+                    throw new Error('Feedback yüklenemedi');
+                }
+            } catch (error) {
+                console.error('Error loading feedback:', error);
+                document.getElementById('table-content').innerHTML = '<div class="p-12 text-center text-red-500">Feedback yüklenirken hata oluştu</div>';
+            }
+        }
+        
+        // ========== EMPLOYEE İŞLEVLERİ ==========
+        
+        async function loadEmployeeRepairRequests() {
+            try {
+                document.getElementById('section-title').textContent = 'Repair Requests';
+                document.getElementById('section-desc').textContent = 'Tamir talepleri yönetimi';
+                document.getElementById('search-container').classList.add('hidden');
+                document.getElementById('offer-form-container').classList.add('hidden');
+                document.getElementById('inventory-form-container').classList.add('hidden');
+                document.getElementById('product-form-container').classList.add('hidden');
+                
+                const response = await fetch('/api/tables/dbo/vw_RepairRequest/data?limit=100', {
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    renderEmployeeRepairRequests(data.rows || []);
+                } else {
+                    throw new Error('Repair requests yüklenemedi');
+                }
+            } catch (error) {
+                console.error('Error loading repair requests:', error);
+                document.getElementById('table-content').innerHTML = '<div class="p-12 text-center text-red-500">Repair requests yüklenirken hata oluştu</div>';
+            }
+        }
+        
+        function renderEmployeeRepairRequests(requests) {
+            const content = document.getElementById('table-content');
+            content.innerHTML = `
+                <div class="p-12">
+                    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+                        <div class="p-6 border-b border-slate-200">
+                            <h2 class="text-2xl font-black text-slate-800">Repair Requests</h2>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead class="bg-slate-50 border-b border-slate-200">
+                                    <tr>
+                                        <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Request ID</th>
+                                        <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Date</th>
+                                        <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Serial Number</th>
+                                        <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Status</th>
+                                        <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    ${requests.length > 0 ? requests.map(req => {
+                                        const status = req.Status || 'Pending';
+                                        const requestId = req.RequestID || req.RepairRequestID;
+                                        const statusClass = status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                          status === 'Accepted' ? 'bg-green-100 text-green-800' :
+                                                          status === 'Rejected' ? 'bg-red-100 text-red-800' :
+                                                          'bg-slate-100 text-slate-800';
+                                        return `
+                                            <tr class="hover:bg-sky-50/50 transition-colors">
+                                                <td class="px-6 py-4 font-black text-sky-600">#${requestId || '-'}</td>
+                                                <td class="px-6 py-4 font-medium text-slate-600">${req.Date ? new Date(req.Date).toLocaleDateString('tr-TR') : '-'}</td>
+                                                <td class="px-6 py-4 font-medium text-slate-700">${req.SerialNumber || '-'}</td>
+                                                <td class="px-6 py-4">
+                                                    <span class="px-3 py-1 ${statusClass} rounded-full text-xs font-bold">${status}</span>
+                                                </td>
+                                                <td class="px-6 py-4 text-center">
+                                                    ${status === 'Pending' ? `
+                                                        <button onclick="showAssignTechnicianModal(${requestId})" class="px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-xl transition-all font-medium text-sm mr-2">
+                                                            <i class="fa-solid fa-user-plus mr-1"></i> Teknisyen Ata
+                                                        </button>
+                                                        <button onclick="updateRepairRequestStatus(${requestId}, 'Rejected')" class="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-xl transition-all font-medium text-sm">
+                                                            <i class="fa-solid fa-times mr-1"></i> Reject
+                                                        </button>
+                                                    ` : ''}
+                                                </td>
+                                            </tr>
+                                        `;
+                                    }).join('') : `
+                                        <tr>
+                                            <td colspan="5" class="px-6 py-12 text-center text-slate-400">
+                                                <i class="fa-solid fa-inbox text-4xl mb-4 opacity-50"></i>
+                                                <p class="text-lg font-medium">Henüz repair request bulunmuyor</p>
+                                            </td>
+                                        </tr>
+                                    `}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        async function updateRepairRequestStatus(requestId, status) {
+            if (!confirm(`Bu repair request'i ${status === 'Accepted' ? 'kabul' : 'reddet'}mek istediğinizden emin misiniz?`)) {
+                return;
+            }
+            
+            try {
+                const endpoint = status === 'Accepted' ? 'accept' : 'reject';
+                const response = await fetch(`/employee/repair-requests/${requestId}/${endpoint}`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'success') {
+                    alert(`Repair request başarıyla ${status === 'Accepted' ? 'kabul edildi' : 'reddedildi'}!`);
+                    loadEmployeeRepairRequests();
+                } else {
+                    alert(data.detail || 'İşlem başarısız');
+                }
+            } catch (error) {
+                console.error('Error updating repair request:', error);
+                alert('Repair request güncellenirken bir hata oluştu');
+            }
+        }
+        
+        async function showAssignTechnicianModal(requestId) {
+            try {
+                // Teknisyen listesini getir
+                const techResponse = await fetch('/employee/repair-requests/technicians', {
+                    credentials: 'include'
+                });
+                const techData = await techResponse.json();
+                
+                if (!techResponse.ok || !techData.technicians) {
+                    alert('Teknisyen listesi yüklenemedi');
+                    return;
+                }
+                
+                // Modal oluştur
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                modal.innerHTML = `
+                    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4" onclick="event.stopPropagation()">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-black text-slate-800">Teknisyen Ata</h2>
+                            <button onclick="this.closest('.fixed').remove()" class="text-slate-400 hover:text-slate-600">
+                                <i class="fa-solid fa-times text-2xl"></i>
+                            </button>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Teknisyen Seç</label>
+                            <select id="technician-select-${requestId}" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                                <option value="">Teknisyen Seçin</option>
+                                ${techData.technicians.map(tech => `
+                                    <option value="${tech.TUserID}">${tech.FirstName} ${tech.LastName}</option>
+                                `).join('')}
+                            </select>
+                        </div>
+                        <div class="mt-6 flex justify-end space-x-4">
+                            <button onclick="this.closest('.fixed').remove()" class="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-medium">
+                                İptal
+                            </button>
+                            <button onclick="assignTechnician(${requestId})" class="px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-all font-medium">
+                                Ata
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                modal.onclick = (e) => {
+                    if (e.target === modal) {
+                        modal.remove();
+                    }
+                };
+                
+                document.body.appendChild(modal);
+            } catch (error) {
+                console.error('Error showing assign technician modal:', error);
+                alert('Modal açılırken bir hata oluştu');
+            }
+        }
+        
+        async function assignTechnician(requestId) {
+            const technicianId = document.getElementById(`technician-select-${requestId}`).value;
+            if (!technicianId) {
+                alert('Lütfen bir teknisyen seçin');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/employee/repair-requests/${requestId}/assign-technician?technician_id=${technicianId}`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'success') {
+                    alert('Teknisyen başarıyla atandı!');
+                    document.querySelector('.fixed').remove();
+                    loadEmployeeRepairRequests();
+                } else {
+                    alert(data.detail || 'Teknisyen atanırken bir hata oluştu');
+                }
+            } catch (error) {
+                console.error('Error assigning technician:', error);
+                alert('Teknisyen atanırken bir hata oluştu');
+            }
+        }
+        
+        // Helper functions
+        function getTokenFromCookie() {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'auth_token') {
+                    return value;
+                }
+            }
+            return '';
+        }
+        
+        function attachCustomerOrderListeners() {
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.view-order-detail-btn')) {
+                    const btn = e.target.closest('.view-order-detail-btn');
+                    const orderId = parseInt(btn.getAttribute('data-order-id'));
+                    viewOrderDetails(orderId);
+                }
+            });
+        }
+        
+        function attachCustomerOfferListeners() {
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.view-offer-detail-btn')) {
+                    const btn = e.target.closest('.view-offer-detail-btn');
+                    const offerId = parseInt(btn.getAttribute('data-offer-id'));
+                    viewOfferDetails(offerId);
+                } else if (e.target.closest('.accept-offer-btn')) {
+                    const btn = e.target.closest('.accept-offer-btn');
+                    const offerId = parseInt(btn.getAttribute('data-offer-id'));
+                    acceptOffer(offerId);
+                }
+            });
+        }
+        
+        function attachCustomerRepairListeners() {
+            // Yeni Tamir Talebi butonu için event listener
+            setTimeout(() => {
+                const newRepairBtn = document.querySelector('button[onclick="showCreateRepairRequestModal()"]');
+                if (newRepairBtn) {
+                    newRepairBtn.onclick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (typeof showCreateRepairRequestModal === 'function') {
+                            showCreateRepairRequestModal();
+                        } else {
+                            const modal = document.getElementById('repair-request-modal');
+                            if (modal) {
+                                modal.classList.remove('hidden');
+                                modal.classList.add('flex');
+                            }
+                        }
+                    };
+                }
+            }, 100);
+            
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.cancel-repair-request-btn')) {
+                    const btn = e.target.closest('.cancel-repair-request-btn');
+                    const requestId = parseInt(btn.getAttribute('data-request-id'));
+                    cancelRepairRequest(requestId);
+                }
+            });
+        }
+        
+        function attachCustomerFeedbackListeners() {
+            // Yeni Feedback butonu için event listener
+            setTimeout(() => {
+                const newFeedbackBtn = document.querySelector('button[onclick="showCreateFeedbackModal()"]');
+                if (newFeedbackBtn) {
+                    newFeedbackBtn.onclick = function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (typeof showCreateFeedbackModal === 'function') {
+                            showCreateFeedbackModal();
+                        } else {
+                            const modal = document.getElementById('feedback-modal');
+                            if (modal) {
+                                modal.classList.remove('hidden');
+                                modal.classList.add('flex');
+                            }
+                        }
+                    };
+                }
+            }, 100);
+            
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.edit-feedback-btn')) {
+                    const btn = e.target.closest('.edit-feedback-btn');
+                    const feedbackId = parseInt(btn.getAttribute('data-feedback-id'));
+                    const orderId = parseInt(btn.getAttribute('data-order-id'));
+                    const rating = parseInt(btn.getAttribute('data-rating'));
+                    const text = btn.getAttribute('data-text') || '';
+                    editFeedback(feedbackId, orderId, rating, text);
+                } else if (e.target.closest('.delete-feedback-btn')) {
+                    const btn = e.target.closest('.delete-feedback-btn');
+                    const feedbackId = parseInt(btn.getAttribute('data-feedback-id'));
+                    deleteFeedback(feedbackId);
+                }
+            });
+        }
+        
+        async function viewOrderDetails(orderId) {
+            try {
+                const response = await fetch(`/customer/orders/${orderId}/details`, {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                // Modal oluştur
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                modal.innerHTML = `
+                    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-black text-slate-800">Sipariş Detayları</h2>
+                            <button onclick="this.closest('.fixed').remove()" class="text-slate-400 hover:text-slate-600">
+                                <i class="fa-solid fa-times text-2xl"></i>
+                            </button>
+                        </div>
+                        <div id="order-details-content-${orderId}">
+                            <div class="space-y-6">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="text-sm font-bold text-slate-700">Sipariş ID</label>
+                                        <p class="text-lg font-black text-slate-800">#${data.order.OrderID}</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-bold text-slate-700">Tarih</label>
+                                        <p class="text-lg font-medium text-slate-800">${new Date(data.order.OrderDate).toLocaleDateString('tr-TR')}</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-bold text-slate-700">Durum</label>
+                                        <p class="text-lg font-medium text-slate-800">${data.order.Status || 'Active'}</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-bold text-slate-700">Toplam Tutar</label>
+                                        <p class="text-lg font-black text-sky-600">${parseFloat(data.order.TotalAmount || 0).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ₺</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-black text-slate-800 mb-4">Ürünler</h3>
+                                    <table class="w-full text-left border-collapse">
+                                        <thead class="bg-slate-50 border-b border-slate-200">
+                                            <tr>
+                                                <th class="px-4 py-3 text-xs font-black text-slate-400 uppercase">Ürün Adı</th>
+                                                <th class="px-4 py-3 text-xs font-black text-slate-400 uppercase">Açıklama</th>
+                                                <th class="px-4 py-3 text-xs font-black text-slate-400 uppercase text-center">Miktar</th>
+                                                <th class="px-4 py-3 text-xs font-black text-slate-400 uppercase text-right">Birim Fiyat</th>
+                                                <th class="px-4 py-3 text-xs font-black text-slate-400 uppercase text-right">Toplam</th>
+                                                <th class="px-4 py-3 text-xs font-black text-slate-400 uppercase text-center">İşlem</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-100">
+                                            ${data.order_lines.map(line => `
+                                                <tr>
+                                                    <td class="px-4 py-3 font-bold text-slate-800">${line.ProductName || '-'}</td>
+                                                    <td class="px-4 py-3 text-slate-600">${line.Description || '-'}</td>
+                                                    <td class="px-4 py-3 text-center font-medium text-slate-700">${line.Quantity || 0}</td>
+                                                    <td class="px-4 py-3 text-right font-medium text-slate-700">${parseFloat(line.UnitPrice || 0).toLocaleString('tr-TR', {minimumFractionDigits: 2})} ₺</td>
+                                                    <td class="px-4 py-3 text-right font-bold text-slate-800">${parseFloat(line.TotalPrice || 0).toLocaleString('tr-TR', {minimumFractionDigits: 2})} ₺</td>
+                                                    <td class="px-4 py-3 text-center">
+                                                        ${line.SerialNumber ? `
+                                                            <button onclick="createRepairRequestFromOrder(${data.order.OrderID}, '${line.ProductCode}', '${line.SerialNumber}')" class="px-3 py-1 bg-orange-50 text-orange-600 hover:bg-orange-600 hover:text-white rounded-lg transition-all font-medium text-xs">
+                                                                <i class="fa-solid fa-wrench mr-1"></i> Tamir Talebi
+                                                            </button>
+                                                        ` : '<span class="text-slate-400 text-xs">Seri No Yok</span>'}
+                                                    </td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="flex justify-end">
+                                    <button onclick="showFeedbackFormForOrder(${data.order.OrderID})" class="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-all font-medium">
+                                        <i class="fa-solid fa-star mr-2"></i> Feedback Ver
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                modal.onclick = (e) => {
+                    if (e.target === modal) {
+                        modal.remove();
+                    }
+                };
+                
+                document.body.appendChild(modal);
+            } catch (error) {
+                console.error('Error loading order details:', error);
+                alert('Order detayları yüklenirken bir hata oluştu');
+            }
+        }
+        
+        async function createRepairRequestFromOrder(orderId, productCode, serialNumber) {
+            if (!confirm('Bu ürün için tamir talebi oluşturmak istediğinizden emin misiniz?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/customer/repair-requests/create?order_id=${orderId}&product_code=${encodeURIComponent(productCode)}&serial_number=${encodeURIComponent(serialNumber)}`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'success') {
+                    alert('Tamir talebi başarıyla oluşturuldu!');
+                    loadCustomerRepairRequests();
+                    document.querySelector('.fixed').remove();
+                } else {
+                    alert(data.detail || 'Tamir talebi oluşturulurken bir hata oluştu');
+                }
+            } catch (error) {
+                console.error('Error creating repair request:', error);
+                alert('Tamir talebi oluşturulurken bir hata oluştu');
+            }
+        }
+        
+        function showFeedbackFormForOrder(orderId) {
+            const rating = prompt('Değerlendirme (1-5):');
+            const comment = prompt('Yorumunuz:');
+            
+            if (rating && comment) {
+                submitFeedbackForOrder(orderId, parseInt(rating), comment);
+            }
+        }
+        
+        async function submitFeedbackForOrder(orderId, rating, comment) {
+            try {
+                const response = await fetch(`/customer/orders/${orderId}/feedback?rating=${rating}&comment=${encodeURIComponent(comment)}`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'success') {
+                    alert('Feedback başarıyla oluşturuldu!');
+                    document.querySelector('.fixed').remove();
+                } else {
+                    alert(data.detail || 'Feedback oluşturulurken bir hata oluştu');
+                }
+            } catch (error) {
+                console.error('Error submitting feedback:', error);
+                alert('Feedback oluşturulurken bir hata oluştu');
+            }
+        }
+        
+        async function viewOfferDetails(offerId) {
+            try {
+                const response = await fetch(`/customer/offers/${offerId}/details`, {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                // Modal oluştur
+                const modal = document.createElement('div');
+                modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                modal.innerHTML = `
+                    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-black text-slate-800">Teklif Detayları</h2>
+                            <button onclick="this.closest('.fixed').remove()" class="text-slate-400 hover:text-slate-600">
+                                <i class="fa-solid fa-times text-2xl"></i>
+                            </button>
+                        </div>
+                        <div class="space-y-6">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-sm font-bold text-slate-700">Teklif ID</label>
+                                    <p class="text-lg font-black text-slate-800">#${data.offer.OfferID}</p>
+                                </div>
+                                <div>
+                                    <label class="text-sm font-bold text-slate-700">Tarih</label>
+                                    <p class="text-lg font-medium text-slate-800">${new Date(data.offer.OfferDate).toLocaleDateString('tr-TR')}</p>
+                                </div>
+                                <div>
+                                    <label class="text-sm font-bold text-slate-700">Durum</label>
+                                    <p class="text-lg font-medium text-slate-800">${data.offer.Status}</p>
+                                </div>
+                                <div>
+                                    <label class="text-sm font-bold text-slate-700">Toplam Tutar</label>
+                                    <p class="text-lg font-black text-sky-600">${parseFloat(data.offer.TotalAmount || 0).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ₺</p>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-black text-slate-800 mb-4">Ürünler</h3>
+                                <table class="w-full text-left border-collapse">
+                                    <thead class="bg-slate-50 border-b border-slate-200">
+                                        <tr>
+                                            <th class="px-4 py-3 text-xs font-black text-slate-400 uppercase">Ürün Adı</th>
+                                            <th class="px-4 py-3 text-xs font-black text-slate-400 uppercase">Açıklama</th>
+                                            <th class="px-4 py-3 text-xs font-black text-slate-400 uppercase text-center">Miktar</th>
+                                            <th class="px-4 py-3 text-xs font-black text-slate-400 uppercase text-right">Birim Fiyat</th>
+                                            <th class="px-4 py-3 text-xs font-black text-slate-400 uppercase text-right">Toplam</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100">
+                                        ${data.offer_lines.map(line => `
+                                            <tr>
+                                                <td class="px-4 py-3 font-bold text-slate-800">${line.ProductName || '-'}</td>
+                                                <td class="px-4 py-3 text-slate-600">${line.Description || '-'}</td>
+                                                <td class="px-4 py-3 text-center font-medium text-slate-700">${line.Quantity || 0}</td>
+                                                <td class="px-4 py-3 text-right font-medium text-slate-700">${parseFloat(line.UnitPrice || 0).toLocaleString('tr-TR', {minimumFractionDigits: 2})} ₺</td>
+                                                <td class="px-4 py-3 text-right font-bold text-slate-800">${parseFloat(line.TotalPrice || 0).toLocaleString('tr-TR', {minimumFractionDigits: 2})} ₺</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                modal.onclick = (e) => {
+                    if (e.target === modal) {
+                        modal.remove();
+                    }
+                };
+                
+                document.body.appendChild(modal);
+            } catch (error) {
+                console.error('Error loading offer details:', error);
+                alert('Offer detayları yüklenirken bir hata oluştu');
+            }
+        }
+        
+        async function acceptOffer(offerId) {
+            if (!confirm('Bu teklifi kabul etmek istediğinizden emin misiniz?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/customer/offers/${offerId}/accept`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'success') {
+                    alert('Teklif başarıyla kabul edildi ve sipariş oluşturuldu!');
+                    loadCustomerOrders();
+                } else {
+                    alert(data.detail || 'Teklif kabul edilirken bir hata oluştu');
+                }
+            } catch (error) {
+                console.error('Error accepting offer:', error);
+                alert('Teklif kabul edilirken bir hata oluştu');
+            }
+        }
+        
+        async function cancelRepairRequest(requestId) {
+            if (!confirm('Bu tamir talebini iptal etmek istediğinizden emin misiniz?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/customer/repair-requests/${requestId}/cancel`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'success') {
+                    alert('Tamir talebi başarıyla iptal edildi!');
+                    loadCustomerRepairRequests();
+                } else {
+                    alert(data.detail || 'Tamir talebi iptal edilirken bir hata oluştu');
+                }
+            } catch (error) {
+                console.error('Error cancelling repair request:', error);
+                alert('Tamir talebi iptal edilirken bir hata oluştu');
+            }
+        }
+        
+        function editFeedback(feedbackId, orderId, rating, text) {
+            const newRating = prompt('Yeni değerlendirme (1-5):', rating);
+            const newText = prompt('Yeni yorum:', text);
+            
+            if (newRating && newText) {
+                updateFeedback(feedbackId, parseInt(newRating), newText);
+            }
+        }
+        
+        async function updateFeedback(feedbackId, rating, comment) {
+            try {
+                const response = await fetch(`/customer/feedback/${feedbackId}?rating=${rating}&comment=${encodeURIComponent(comment)}`, {
+                    method: 'PUT',
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'success') {
+                    alert('Feedback başarıyla güncellendi!');
+                    loadCustomerFeedback();
+                } else {
+                    alert(data.detail || 'Feedback güncellenirken bir hata oluştu');
+                }
+            } catch (error) {
+                console.error('Error updating feedback:', error);
+                alert('Feedback güncellenirken bir hata oluştu');
+            }
+        }
+        
+        async function deleteFeedback(feedbackId) {
+            if (!confirm('Bu feedback\'i silmek istediğinizden emin misiniz?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/customer/feedback/${feedbackId}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'success') {
+                    alert('Feedback başarıyla silindi!');
+                    loadCustomerFeedback();
+                } else {
+                    alert(data.detail || 'Feedback silinirken bir hata oluştu');
+                }
+            } catch (error) {
+                console.error('Error deleting feedback:', error);
+                alert('Feedback silinirken bir hata oluştu');
+            }
+        }
+
+        // Order'ı tamamla (status'u "Kabul Edildi" yap)
+        async function completeOrder(orderId) {
+            if (!confirm('Bu siparişi tamamlamak (Kabul Edildi olarak işaretlemek) istediğinizden emin misiniz?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/employee/orders/${orderId}/update-status?status=Completed`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Order status güncellenirken bir hata oluştu');
+                }
+                
+                const data = await response.json();
+                alert('Sipariş başarıyla tamamlandı (Kabul Edildi)!');
+                
+                // Tabloyu yeniden yükle
+                if (currentSchema && currentTableName) {
+                    loadTableData(currentSchema, currentTableName, currentFullName);
+                }
+            } catch (error) {
+                console.error('Error completing order:', error);
+                alert(error.message || 'Order tamamlanırken bir hata oluştu');
+            }
+        }
+
+        // Order'ı reddet (status'u "NotAccepted" yap)
+        async function rejectOrder(orderId) {
+            if (!confirm('Bu siparişi reddetmek (Kabul Edilmedi olarak işaretlemek) istediğinizden emin misiniz?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/employee/orders/${orderId}/update-status?status=NotAccepted`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Order status güncellenirken bir hata oluştu');
+                }
+                
+                const data = await response.json();
+                alert('Sipariş başarıyla reddedildi (Kabul Edilmedi)!');
+                
+                // Tabloyu yeniden yükle
+                if (currentSchema && currentTableName) {
+                    loadTableData(currentSchema, currentTableName, currentFullName);
+                }
+            } catch (error) {
+                console.error('Error rejecting order:', error);
+                alert(error.message || 'Order reddedilirken bir hata oluştu');
+            }
+        }
+
+        // Sayfa yüklendiğinde tabloları yükle ve HR yetkisini kontrol et
+        window.onload = async () => {
+            // Form container'ları gizle
+            document.getElementById('offer-form-container').classList.add('hidden');
+            document.getElementById('inventory-form-container').classList.add('hidden');
+            document.getElementById('product-form-container').classList.add('hidden');
+            
+            // Table content'i göster
+            document.getElementById('table-content').classList.remove('hidden');
+            
+            await checkHRPermission();
+            
+            // User type'a göre section'ları göster
+            if (userType === 'customer') {
+                document.getElementById('customer-section').classList.remove('hidden');
+                // Customer için Forms ve Database Tables bölümlerini gizle
+                document.getElementById('forms-section').classList.add('hidden');
+                document.getElementById('create-offer-link').classList.add('hidden');
+                document.getElementById('create-inventory-link').classList.add('hidden');
+                document.getElementById('create-product-link').classList.add('hidden');
+                document.getElementById('database-tables-section').classList.add('hidden');
+                document.getElementById('table-list').classList.add('hidden');
+            } else if (userType === 'employee') {
+                document.getElementById('employee-section').classList.remove('hidden');
+                // Employee için Forms ve Database Tables bölümlerini göster
+                document.getElementById('forms-section').classList.remove('hidden');
+                document.getElementById('create-offer-link').classList.remove('hidden');
+                document.getElementById('create-inventory-link').classList.remove('hidden');
+                document.getElementById('create-product-link').classList.remove('hidden');
+                document.getElementById('database-tables-section').classList.remove('hidden');
+                document.getElementById('table-list').classList.remove('hidden');
+                // Employee için gerekli verileri yükle
+                await loadDepartments();
+                await loadCustomers();
+                await loadProducts();
+                loadTables();
+            }
+        };
+    </script>
+</body>
+</html>

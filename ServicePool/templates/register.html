@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <title>ServicePool | Register</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .tab-transition { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        html { font-size: 18px; }
+        select {
+            background-image: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        select option {
+            padding: 0.5rem;
+            font-size: 0.9rem;
+        }
+        /* Department dropdown için özel stil - küçük açılma */
+        #department-select {
+            font-size: 1rem;
+        }
+        #department-select:focus {
+            font-size: 1rem;
+        }
+        #department-select option {
+            padding: 0.35rem 0.5rem;
+            font-size: 0.9rem;
+            line-height: 1.3;
+        }
+        /* Dropdown açıldığında maksimum yükseklik */
+        #department-select:not([size]) {
+            max-height: 300px;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 flex items-center justify-center min-h-screen p-6">
+    <div class="w-full max-w-xl">
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-white shadow-lg mb-4">
+                <i class="fa-solid fa-user-plus text-5xl text-blue-700"></i>
+            </div>
+            <h1 class="text-5xl font-extrabold text-slate-900 tracking-tight">Service<span class="text-blue-700">Pool</span></h1>
+            <p class="text-slate-500 mt-2 text-lg font-medium">Create Corporate Account</p>
+        </div>
+
+        <div class="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/50">
+            <div class="flex p-3 bg-slate-50/50 gap-2">
+                <button onclick="switchRole('employee')" id="emp-tab" class="flex-1 flex items-center justify-center py-5 rounded-3xl text-sm font-bold uppercase tracking-wider tab-transition bg-white shadow-md text-blue-700 border border-blue-100">
+                    <i class="fa-solid fa-user-tie mr-3 text-lg"></i> Employee
+                </button>
+                <button onclick="switchRole('customer')" id="cust-tab" class="flex-1 flex items-center justify-center py-5 rounded-3xl text-sm font-bold uppercase tracking-wider tab-transition text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-building-user mr-3 text-lg"></i> Customer
+                </button>
+            </div>
+
+            <div class="p-12">
+                <form action="/auth/register" method="POST" class="space-y-6" id="register-form">
+                    <input type="hidden" name="role" id="role-input" value="employee">
+                    <input type="hidden" name="employee_type" id="employee-type-input" value="employee">
+                    
+                    <!-- Employee Fields -->
+                    <div id="employee-fields">
+                        <div class="space-y-2">
+                            <label class="text-md font-bold text-slate-700 ml-1">TC Number <span class="text-red-500">*</span></label>
+                            <div class="relative group">
+                                <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600 transition-colors">
+                                    <i class="fa-solid fa-id-card text-xl"></i>
+                                </div>
+                                <input type="text" name="tc" id="tc-input" maxlength="11" required class="block w-full pl-14 pr-4 py-5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all text-lg" placeholder="11 haneli TC Kimlik No">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label class="text-md font-bold text-slate-700 ml-1">First Name <span class="text-red-500">*</span></label>
+                                <div class="relative group">
+                                    <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600">
+                                        <i class="fa-solid fa-user text-xl"></i>
+                                    </div>
+                                    <input type="text" name="first_name" maxlength="50" required class="block w-full pl-14 pr-4 py-5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all text-lg" placeholder="Ad">
+                                </div>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-md font-bold text-slate-700 ml-1">Middle Name</label>
+                                <div class="relative group">
+                                    <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600">
+                                        <i class="fa-solid fa-user text-xl"></i>
+                                    </div>
+                                    <input type="text" name="middle_name" maxlength="50" class="block w-full pl-14 pr-4 py-5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all text-lg" placeholder="İkinci Ad">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-md font-bold text-slate-700 ml-1">Last Name <span class="text-red-500">*</span></label>
+                            <div class="relative group">
+                                <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600">
+                                    <i class="fa-solid fa-user text-xl"></i>
+                                </div>
+                                <input type="text" name="last_name" maxlength="50" required class="block w-full pl-14 pr-4 py-5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all text-lg" placeholder="Soyad">
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-md font-bold text-slate-700 ml-1">Department <span class="text-red-500">*</span></label>
+                            <div class="relative group">
+                                <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600 z-10">
+                                    <i class="fa-solid fa-building text-xl"></i>
+                                </div>
+                                <select name="department" id="department-select" required size="1" class="block w-full pl-14 pr-4 py-5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all text-base appearance-none cursor-pointer">
+                                    <option value="">Departman Seçiniz</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-0 pr-5 flex items-center pointer-events-none">
+                                    <i class="fa-solid fa-chevron-down text-slate-400"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label class="text-md font-bold text-slate-700 ml-1">Birth Date <span class="text-red-500">*</span></label>
+                                <div class="relative group">
+                                    <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600">
+                                        <i class="fa-solid fa-calendar text-xl"></i>
+                                    </div>
+                                    <input type="date" name="birth_date" required class="block w-full pl-14 pr-4 py-5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all text-lg">
+                                </div>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-md font-bold text-slate-700 ml-1">Hired Date <span class="text-red-500">*</span></label>
+                                <div class="relative group">
+                                    <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600">
+                                        <i class="fa-solid fa-briefcase text-xl"></i>
+                                    </div>
+                                    <input type="date" name="hired_date" required class="block w-full pl-14 pr-4 py-5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all text-lg">
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Customer Fields (hidden by default) -->
+                    <div id="customer-fields" class="hidden">
+                        <div class="space-y-2">
+                            <label class="text-md font-bold text-slate-700 ml-1">Trade Registry Number <span class="text-red-500">*</span></label>
+                            <div class="relative group">
+                                <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-emerald-600">
+                                    <i class="fa-solid fa-hashtag text-xl"></i>
+                                </div>
+                                <input type="text" name="registry_no" id="registry-input" maxlength="50" required class="block w-full pl-14 pr-4 py-5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 transition-all text-lg" placeholder="Ticaret Sicil No">
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-md font-bold text-slate-700 ml-1">Company Trade Name <span class="text-red-500">*</span></label>
+                            <div class="relative group">
+                                <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-emerald-600">
+                                    <i class="fa-solid fa-building text-xl"></i>
+                                </div>
+                                <input type="text" name="company_trade_name" id="company-trade-name-input" maxlength="100" required class="block w-full pl-14 pr-4 py-5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 transition-all text-lg" placeholder="Şirket Ticari Unvanı">
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-md font-bold text-slate-700 ml-1">Tax Office <span class="text-red-500">*</span></label>
+                            <div class="relative group">
+                                <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-emerald-600">
+                                    <i class="fa-solid fa-landmark text-xl"></i>
+                                </div>
+                                <input type="text" name="tax_office" id="tax-office-input" maxlength="50" required class="block w-full pl-14 pr-4 py-5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 transition-all text-lg" placeholder="Vergi Dairesi">
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-md font-bold text-slate-700 ml-1">Tax Number <span class="text-red-500">*</span></label>
+                            <div class="relative group">
+                                <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-emerald-600">
+                                    <i class="fa-solid fa-receipt text-xl"></i>
+                                </div>
+                                <input type="text" name="tax_number" id="tax-number-input" maxlength="50" required class="block w-full pl-14 pr-4 py-5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 transition-all text-lg" placeholder="Vergi Numarası">
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-md font-bold text-slate-700 ml-1">Website</label>
+                            <div class="relative group">
+                                <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-emerald-600">
+                                    <i class="fa-solid fa-globe text-xl"></i>
+                                </div>
+                                <input type="url" name="website" id="website-input" maxlength="255" class="block w-full pl-14 pr-4 py-5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 transition-all text-lg" placeholder="https://example.com">
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-md font-bold text-slate-700 ml-1">Year of Establishment</label>
+                            <div class="relative group">
+                                <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-emerald-600">
+                                    <i class="fa-solid fa-calendar-days text-xl"></i>
+                                </div>
+                                <input type="number" name="year_of_establishment" id="year-input" min="1900" max="2100" class="block w-full pl-14 pr-4 py-5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 transition-all text-lg" placeholder="Kuruluş Yılı">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-md font-bold text-slate-700 ml-1">Password <span class="text-red-500">*</span></label>
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600">
+                                <i class="fa-solid fa-lock text-xl"></i>
+                            </div>
+                            <input type="password" name="password" required class="block w-full pl-14 pr-4 py-5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all text-lg" placeholder="••••••••">
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-md font-bold text-slate-700 ml-1">Confirm Password <span class="text-red-500">*</span></label>
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600">
+                                <i class="fa-solid fa-check-double text-xl"></i>
+                            </div>
+                            <input type="password" name="confirm_password" required class="block w-full pl-14 pr-4 py-5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all text-lg" placeholder="Repeat password">
+                        </div>
+                    </div>
+
+                    <button type="submit" id="main-button" class="w-full py-6 rounded-2xl font-bold text-white text-xl shadow-xl bg-blue-700 hover:bg-blue-800 transition-all">
+                        Register Now
+                    </button>
+                </form>
+
+                <div class="mt-8 pt-6 border-t text-center">
+                    <p class="text-slate-500">Already have an account? <a href="/auth/login" id="login-link" class="text-blue-700 font-bold hover:underline">Sign In</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Form submit edilmeden önce role değerini kontrol et
+        function validateForm() {
+            try {
+                const roleInput = document.getElementById('role-input');
+                const empFields = document.getElementById('employee-fields');
+                const custFields = document.getElementById('customer-fields');
+                const employeeTypeInput = document.getElementById('employee-type-input');
+                
+                if (!roleInput || !empFields || !custFields || !employeeTypeInput) {
+                    console.error('Form elements not found');
+                    return true; // Yine de submit et
+                }
+                
+                // Eğer employee fields görünürse role = employee
+                if (!empFields.classList.contains('hidden')) {
+                    roleInput.value = 'employee';
+                    employeeTypeInput.value = 'Salaried';
+                }
+                // Eğer customer fields görünürse role = customer
+                else if (!custFields.classList.contains('hidden')) {
+                    roleInput.value = 'customer';
+                    employeeTypeInput.value = 'CustomerCompany';
+                }
+                
+                console.log('Form submitting with role:', roleInput.value);
+                console.log('Form submitting with employee_type:', employeeTypeInput.value);
+                return true; // Form submit edilsin
+            } catch (error) {
+                console.error('Error in validateForm:', error);
+                return true; // Hata olsa bile submit et
+            }
+        }
+        
+        function switchRole(role) {
+            const empTab = document.getElementById('emp-tab');
+            const custTab = document.getElementById('cust-tab');
+            const mainBtn = document.getElementById('main-button');
+            const roleInput = document.getElementById('role-input');
+            const empFields = document.getElementById('employee-fields');
+            const custFields = document.getElementById('customer-fields');
+            const tcInput = document.getElementById('tc-input');
+            const registryInput = document.getElementById('registry-input');
+            const companyTradeNameInput = document.getElementById('company-trade-name-input');
+            const taxOfficeInput = document.getElementById('tax-office-input');
+            const taxNumberInput = document.getElementById('tax-number-input');
+            const loginLink = document.getElementById('login-link');
+            const employeeTypeInput = document.getElementById('employee-type-input');
+            
+            // Employee alanlarını seç - daha güvenli yöntem
+            const firstNameInput = empFields ? empFields.querySelector('input[name="first_name"]') : null;
+            const middleNameInput = empFields ? empFields.querySelector('input[name="middle_name"]') : null;
+            const lastNameInput = empFields ? empFields.querySelector('input[name="last_name"]') : null;
+            const departmentInput = empFields ? empFields.querySelector('select[name="department"]') : null;
+            const birthDateInput = empFields ? empFields.querySelector('input[name="birth_date"]') : null;
+            const hiredDateInput = empFields ? empFields.querySelector('input[name="hired_date"]') : null;
+            
+            if(role === 'employee') {
+                // Update tabs
+                empTab.className = "flex-1 flex items-center justify-center py-5 rounded-3xl text-sm font-bold uppercase tracking-wider tab-transition bg-white shadow-md text-blue-700 border border-blue-100";
+                custTab.className = "flex-1 flex items-center justify-center py-5 rounded-3xl text-sm font-bold uppercase tracking-wider tab-transition text-slate-400 hover:text-slate-600";
+                
+                // Update form fields visibility
+                empFields.classList.remove('hidden');
+                custFields.classList.add('hidden');
+                
+                // Update required attributes - Employee alanları required
+                if (tcInput) tcInput.required = true;
+                if (firstNameInput) firstNameInput.required = true;
+                if (lastNameInput) lastNameInput.required = true;
+                if (departmentInput) departmentInput.required = true;
+                if (birthDateInput) birthDateInput.required = true;
+                if (hiredDateInput) hiredDateInput.required = true;
+                if (middleNameInput) middleNameInput.required = false; // Optional
+                
+                // Customer alanları required değil
+                if (registryInput) registryInput.required = false;
+                if (companyTradeNameInput) companyTradeNameInput.required = false;
+                if (taxOfficeInput) taxOfficeInput.required = false;
+                if (taxNumberInput) taxNumberInput.required = false;
+                
+                // Update button
+                mainBtn.className = "w-full py-6 rounded-2xl font-bold text-white text-xl shadow-xl bg-blue-700 hover:bg-blue-800 transition-all";
+                
+                // Update hidden role input
+                roleInput.value = 'employee';
+                
+                // Update employee_type input - Employee için "Salaried"
+                if (employeeTypeInput) employeeTypeInput.value = 'Salaried';
+            } else {
+                // Update tabs
+                custTab.className = "flex-1 flex items-center justify-center py-5 rounded-3xl text-sm font-bold uppercase tracking-wider tab-transition bg-white shadow-md text-emerald-700 border border-emerald-100";
+                empTab.className = "flex-1 flex items-center justify-center py-5 rounded-3xl text-sm font-bold uppercase tracking-wider tab-transition text-slate-400 hover:text-slate-600";
+                
+                // Update form fields visibility
+                empFields.classList.add('hidden');
+                custFields.classList.remove('hidden');
+                
+                // Update required attributes - Employee alanları required değil
+                if (tcInput) tcInput.required = false;
+                if (firstNameInput) firstNameInput.required = false;
+                if (middleNameInput) middleNameInput.required = false;
+                if (lastNameInput) lastNameInput.required = false;
+                if (departmentInput) departmentInput.required = false;
+                if (birthDateInput) birthDateInput.required = false;
+                if (hiredDateInput) hiredDateInput.required = false;
+                
+                // Customer alanları required
+                if (registryInput) registryInput.required = true;
+                if (companyTradeNameInput) companyTradeNameInput.required = true;
+                if (taxOfficeInput) taxOfficeInput.required = true;
+                if (taxNumberInput) taxNumberInput.required = true;
+                
+                // Update button
+                mainBtn.className = "w-full py-6 rounded-2xl font-bold text-white text-xl shadow-xl bg-emerald-600 hover:bg-emerald-700 transition-all";
+                
+                // Update hidden role input
+                roleInput.value = 'customer';
+                
+                // Update employee_type input - Customer için "customer" (kullanılmayacak ama gönderiliyor)
+                if (employeeTypeInput) employeeTypeInput.value = 'CustomerCompany';
+            }
+            
+            // Update login link
+            if (loginLink) {
+                loginLink.href = `/auth/login?role=${role}`;
+            }
+        }
+        
+        // Form submit edilmeden önce role değerini ayarla
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('register-form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    validateForm();
+                    // Form submit edilsin, engelleme
+                });
+            }
+        });
+        
+        // Department'ları veritabanından yükle
+        async function loadDepartments() {
+            try {
+                console.log('Loading departments...');
+                const response = await fetch('/auth/departments');
+                
+                if (!response.ok) {
+                    console.error('Failed to fetch departments:', response.status, response.statusText);
+                    return;
+                }
+                
+                const data = await response.json();
+                console.log('Departments data received:', data);
+                
+                const departmentSelect = document.getElementById('department-select');
+                
+                if (!departmentSelect) {
+                    console.error('Department select element not found!');
+                    return;
+                }
+                
+                if (data.departments && data.departments.length > 0) {
+                    // Mevcut option'ları temizle (sadece placeholder kalacak)
+                    departmentSelect.innerHTML = '<option value="">Departman Seçiniz</option>';
+                    
+                    // Department'ları ekle
+                    data.departments.forEach(dept => {
+                        const option = document.createElement('option');
+                        option.value = dept.name;
+                        option.textContent = dept.name;
+                        departmentSelect.appendChild(option);
+                    });
+                    console.log('Departments loaded successfully:', data.departments.length);
+                } else {
+                    console.warn('No departments found in response');
+                    departmentSelect.innerHTML = '<option value="">Departman Bulunamadı</option>';
+                }
+            } catch (error) {
+                console.error('Error loading departments:', error);
+                const departmentSelect = document.getElementById('department-select');
+                if (departmentSelect) {
+                    departmentSelect.innerHTML = '<option value="">Yükleme Hatası</option>';
+                }
+            }
+        }
+
+        // Sayfa yüklendiğinde URL'deki role parametresine göre tab'ı ayarla ve department'ları yükle
+        function initializePage() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const role = urlParams.get('role');
+            if (role === 'customer') {
+                switchRole('customer');
+            } else {
+                switchRole('employee');
+            }
+            // Department'ları yükle
+            loadDepartments();
+        }
+
+        // DOMContentLoaded event'i için
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializePage);
+        } else {
+            // DOM zaten yüklendi, doğrudan çalıştır
+            initializePage();
+        }
+    </script>
+</body>
+</html>

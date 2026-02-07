@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>ServicePool | Siparişlerim</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen bg-slate-50">
+        <!-- Header -->
+        <header class="bg-white border-b border-slate-200 shadow-sm">
+            <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-black text-slate-800">SERVICE<span class="text-sky-400">POOL</span></h1>
+                    <p class="text-sm text-slate-400">Siparişlerim</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/customer/offers" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-medium">
+                        <i class="fa-solid fa-file-invoice mr-2"></i> Tekliflerim
+                    </a>
+                    <a href="/customer/repair-requests" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-medium">
+                        <i class="fa-solid fa-wrench mr-2"></i> Tamir Talepleri
+                    </a>
+                    <a href="/dashboard" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-all font-medium">
+                        <i class="fa-solid fa-arrow-left mr-2"></i> Dashboard
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <div class="max-w-7xl mx-auto px-6 py-8">
+            <!-- Tarih Filtreleme -->
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-6 mb-6">
+                <h2 class="text-xl font-black text-slate-800 mb-4">Tarih Filtreleme</h2>
+                <form method="GET" action="/customer/orders" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input type="hidden" name="token" value="{{ token }}">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Başlangıç Tarihi</label>
+                        <input type="date" name="start_date" value="{{ start_date }}" 
+                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Bitiş Tarihi</label>
+                        <input type="date" name="end_date" value="{{ end_date }}" 
+                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                    </div>
+                    <div class="flex items-end">
+                        <button type="submit" class="w-full px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-all font-medium">
+                            <i class="fa-solid fa-filter mr-2"></i> Filtrele
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Order Listesi -->
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+                <div class="p-6 border-b border-slate-200 bg-gradient-to-r from-emerald-50 to-green-50 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-black text-slate-800 flex items-center">
+                            <i class="fa-solid fa-shopping-cart mr-3 text-emerald-600"></i>
+                            Siparişler
+                        </h2>
+                        <p class="text-sm text-slate-500 mt-1">Siparişlerinizi görüntüleyin ve takip edin</p>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 border-b-2 border-slate-200">
+                            <tr>
+                                <th class="px-6 py-4 text-xs font-black text-slate-600 uppercase tracking-widest">Sipariş ID</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-600 uppercase tracking-widest">Tarih</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-600 uppercase tracking-widest">Durum</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-600 uppercase tracking-widest">Toplam Tutar</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-600 uppercase tracking-widest text-center">İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            {% if orders %}
+                            {% for order in orders %}
+                            <tr class="hover:bg-sky-50/50 transition-colors">
+                                <td class="px-6 py-4 font-black text-sky-600">#{{ order.OrderID }}</td>
+                                <td class="px-6 py-4 font-medium text-slate-600">{{ order.SaleDate.strftime('%d.%m.%Y') if order.SaleDate else '-' }}</td>
+                                <td class="px-6 py-4">
+                                    {% if order.Status == 'NotCompleted' %}
+                                    <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold">Tamamlanmadı</span>
+                                    {% elif order.Status == 'Completed' %}
+                                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold">Tamamlandı</span>
+                                    {% elif order.Status == 'Cancelled' %}
+                                    <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-bold">İptal</span>
+                                    {% elif order.Status == 'NotAccepted' %}
+                                    <span class="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-bold">Kabul Edilmedi</span>
+                                    {% elif order.Status == 'Active' %}
+                                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold">Aktif</span>
+                                    {% else %}
+                                    <span class="px-3 py-1 bg-slate-100 text-slate-800 rounded-full text-xs font-bold">{{ order.Status or 'Tamamlanmadı' }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 font-bold text-slate-800">{% if order.TotalAmount %}{{ "{:,.2f}".format(order.TotalAmount) }}{% else %}0.00{% endif %} $</td>
+                                <td class="px-6 py-4 text-center">
+                                    <div class="flex justify-center space-x-2">
+                                        <button data-order-id="{{ order.OrderID }}" class="view-order-detail-btn px-4 py-2 bg-sky-50 text-sky-600 hover:bg-sky-600 hover:text-white rounded-xl transition-all font-medium text-sm">
+                                            <i class="fa-solid fa-eye mr-1"></i> Detay
+                                        </button>
+                                        <button data-order-id="{{ order.OrderID }}" class="create-feedback-btn px-4 py-2 bg-purple-50 text-purple-600 hover:bg-purple-600 hover:text-white rounded-xl transition-all font-medium text-sm">
+                                            <i class="fa-solid fa-star mr-1"></i> Feedback
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="px-6 py-12 text-center text-slate-400">
+                                    <i class="fa-solid fa-inbox text-4xl mb-4 opacity-50"></i>
+                                    <p class="text-lg font-medium">Henüz sipariş bulunmuyor</p>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Detay Modal -->
+    <div id="order-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" onclick="closeOrderModal(event)">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-black text-slate-800">Sipariş Detayları</h2>
+                <button onclick="closeOrderModal(event)" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div id="order-details-content">
+                <!-- Detaylar buraya yüklenecek -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div id="feedback-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" onclick="closeFeedbackModal(event)">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-black text-slate-800">Feedback Ver</h2>
+                <button onclick="closeFeedbackModal(event)" class="close-feedback-btn text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Değerlendirme (1-5)</label>
+                    <select id="feedback-rating" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none">
+                        <option value="">Seçiniz</option>
+                        <option value="1">1 - Çok Kötü</option>
+                        <option value="2">2 - Kötü</option>
+                        <option value="3">3 - Orta</option>
+                        <option value="4">4 - İyi</option>
+                        <option value="5">5 - Çok İyi</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Yorumunuz</label>
+                    <textarea id="feedback-comment" rows="4" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" placeholder="Yorumunuzu buraya yazın..."></textarea>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-4">
+                <button onclick="closeFeedbackModal(event)" class="close-feedback-btn px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-medium">
+                    İptal
+                </button>
+                <button onclick="submitFeedback()" class="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-all font-medium">
+                    <i class="fa-solid fa-star mr-2"></i> Gönder
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div id="feedback-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" onclick="closeFeedbackModal(event)">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-black text-slate-800">Feedback Ver</h2>
+                <button onclick="closeFeedbackModal(event)" class="close-feedback-btn text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Değerlendirme (1-5)</label>
+                    <select id="feedback-rating" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none">
+                        <option value="">Seçiniz</option>
+                        <option value="1">1 - Çok Kötü</option>
+                        <option value="2">2 - Kötü</option>
+                        <option value="3">3 - Orta</option>
+                        <option value="4">4 - İyi</option>
+                        <option value="5">5 - Çok İyi</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Yorumunuz</label>
+                    <textarea id="feedback-comment" rows="4" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" placeholder="Yorumunuzu buraya yazın..."></textarea>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-4">
+                <button onclick="closeFeedbackModal(event)" class="close-feedback-btn px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-medium">
+                    İptal
+                </button>
+                <button onclick="submitFeedback()" class="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-all font-medium">
+                    <i class="fa-solid fa-star mr-2"></i> Gönder
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFeedbackOrderId = null;
+
+        // Event delegation ile tüm detay butonlarını dinle
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.view-order-detail-btn')) {
+                const btn = e.target.closest('.view-order-detail-btn');
+                const orderId = parseInt(btn.getAttribute('data-order-id'));
+                viewOrderDetails(orderId);
+            } else if (e.target.closest('.create-feedback-btn')) {
+                const btn = e.target.closest('.create-feedback-btn');
+                const orderId = parseInt(btn.getAttribute('data-order-id'));
+                showFeedbackForm(orderId);
+            }
+        });
+
+        async function viewOrderDetails(orderId) {
+            try {
+                const response = await fetch(`/customer/orders/${orderId}/details`, {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                let html = `
+                    <div class="space-y-6">
+                        <div class="flex justify-end mb-4">
+                            <button onclick="showFeedbackForm(${data.order.OrderID})" class="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-all font-medium">
+                                <i class="fa-solid fa-star mr-2"></i> Feedback Ver
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-sm font-bold text-slate-700">Sipariş ID</label>
+                                <p class="text-lg font-black text-slate-800">#${data.order.OrderID}</p>
+                            </div>
+                            <div>
+                                <label class="text-sm font-bold text-slate-700">Tarih</label>
+                                <p class="text-lg font-medium text-slate-800">${new Date(data.order.SaleDate || data.order.OrderDate).toLocaleDateString('tr-TR')}</p>
+                            </div>
+                            <div>
+                                <label class="text-sm font-bold text-slate-700">Durum</label>
+                                <p class="text-lg font-medium text-slate-800">
+                                    ${data.order.Status === 'NotCompleted' ? '<span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold">Tamamlanmadı</span>' :
+                                      data.order.Status === 'Completed' ? '<span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold">Tamamlandı</span>' :
+                                      data.order.Status === 'Cancelled' ? '<span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-bold">İptal</span>' :
+                                      data.order.Status === 'NotAccepted' ? '<span class="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-bold">Kabul Edilmedi</span>' :
+                                      data.order.Status === 'Active' ? '<span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold">Aktif</span>' :
+                                      data.order.Status || 'Tamamlanmadı'}
+                                </p>
+                            </div>
+                            <div>
+                                <label class="text-sm font-bold text-slate-700">Toplam Tutar</label>
+                                <p class="text-lg font-black text-sky-600">${parseFloat(data.order.TotalAmount || 0).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ₺</p>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-black text-slate-800 mb-4">Ürünler</h3>
+                            <table class="w-full text-left border-collapse">
+                                <thead class="bg-slate-50 border-b border-slate-200">
+                                    <tr>
+                                        <th class="px-4 py-3 text-xs font-black text-slate-400 uppercase">Ürün Adı</th>
+                                        <th class="px-4 py-3 text-xs font-black text-slate-400 uppercase">Açıklama</th>
+                                        <th class="px-4 py-3 text-xs font-black text-slate-400 uppercase text-center">Miktar</th>
+                                        <th class="px-4 py-3 text-xs font-black text-slate-400 uppercase text-right">Birim Fiyat</th>
+                                        <th class="px-4 py-3 text-xs font-black text-slate-400 uppercase text-right">Toplam</th>
+                                        <th class="px-4 py-3 text-xs font-black text-slate-400 uppercase text-center">İşlem</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                `;
+                
+                data.order_lines.forEach(line => {
+                    html += `
+                        <tr>
+                            <td class="px-4 py-3 font-bold text-slate-800">${line.ProductName || '-'}</td>
+                            <td class="px-4 py-3 text-slate-600">${line.Description || '-'}</td>
+                            <td class="px-4 py-3 text-center font-medium text-slate-700">${line.Quantity || 0}</td>
+                            <td class="px-4 py-3 text-right font-medium text-slate-700">${parseFloat(line.UnitPrice || 0).toLocaleString('tr-TR', {minimumFractionDigits: 2})} ₺</td>
+                            <td class="px-4 py-3 text-right font-bold text-slate-800">${parseFloat(line.TotalPrice || 0).toLocaleString('tr-TR', {minimumFractionDigits: 2})} ₺</td>
+                            <td class="px-4 py-3 text-center">
+                                ${line.SerialNumber ? `
+                                    <button onclick="createRepairRequest(${data.order.OrderID}, '${line.ProductCode}', '${line.SerialNumber}')" class="px-3 py-1 bg-orange-50 text-orange-600 hover:bg-orange-600 hover:text-white rounded-lg transition-all font-medium text-xs">
+                                        <i class="fa-solid fa-wrench mr-1"></i> Tamir Talebi
+                                    </button>
+                                ` : '-'}
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('order-details-content').innerHTML = html;
+                document.getElementById('order-modal').classList.remove('hidden');
+                document.getElementById('order-modal').classList.add('flex');
+            } catch (error) {
+                console.error('Error loading order details:', error);
+                alert('Sipariş detayları yüklenirken bir hata oluştu');
+            }
+        }
+
+        function closeOrderModal(event) {
+            if (event.target.id === 'order-modal' || event.target.closest('button')) {
+                document.getElementById('order-modal').classList.add('hidden');
+                document.getElementById('order-modal').classList.remove('flex');
+            }
+        }
+
+        function createRepairRequest(orderId, productCode, serialNumber) {
+            if (!serialNumber || !serialNumber.trim()) {
+                alert('Bu ürün için seri numarası bulunamadı. Tamir talebi oluşturulamaz.');
+                return;
+            }
+            
+            if (!confirm('Bu ürün için tamir talebi oluşturmak istediğinizden emin misiniz?')) {
+                return;
+            }
+            
+            fetch(`/customer/repair-requests/create?order_id=${orderId}&product_code=${encodeURIComponent(productCode)}&serial_number=${encodeURIComponent(serialNumber)}`, {
+                method: 'POST',
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Tamir talebi başarıyla oluşturuldu!');
+                    window.location.reload();
+                } else {
+                    alert(data.detail || 'Tamir talebi oluşturulurken bir hata oluştu');
+                }
+            })
+            .catch(error => {
+                console.error('Error creating repair request:', error);
+                alert('Tamir talebi oluşturulurken bir hata oluştu');
+            });
+        }
+
+        function showFeedbackForm(orderId) {
+            currentFeedbackOrderId = orderId;
+            document.getElementById('feedback-modal').classList.remove('hidden');
+            document.getElementById('feedback-modal').classList.add('flex');
+            // Reset form
+            document.getElementById('feedback-rating').value = '';
+            document.getElementById('feedback-comment').value = '';
+        }
+
+        function closeFeedbackModal(event) {
+            if (event.target.id === 'feedback-modal' || event.target.closest('.close-feedback-btn')) {
+                document.getElementById('feedback-modal').classList.add('hidden');
+                document.getElementById('feedback-modal').classList.remove('flex');
+                currentFeedbackOrderId = null;
+            }
+        }
+
+        function submitFeedback() {
+            const rating = parseInt(document.getElementById('feedback-rating').value);
+            const comment = document.getElementById('feedback-comment').value;
+            
+            if (!rating || rating < 1 || rating > 5) {
+                alert('Lütfen 1-5 arası bir değerlendirme seçin');
+                return;
+            }
+            
+            if (!comment || !comment.trim()) {
+                alert('Lütfen bir yorum girin');
+                return;
+            }
+
+            fetch(`/customer/orders/${currentFeedbackOrderId}/feedback?rating=${rating}&comment=${encodeURIComponent(comment)}`, {
+                method: 'POST',
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Feedback başarıyla oluşturuldu!');
+                    document.getElementById('feedback-modal').classList.add('hidden');
+                    document.getElementById('feedback-modal').classList.remove('flex');
+                    currentFeedbackOrderId = null;
+                } else {
+                    alert(data.detail || 'Feedback oluşturulurken bir hata oluştu');
+                }
+            })
+            .catch(error => {
+                console.error('Error creating feedback:', error);
+                alert('Feedback oluşturulurken bir hata oluştu');
+            });
+        }
+    </script>
+</body>
+</html>
+

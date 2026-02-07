@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>ServicePool | Tekliflerim</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen bg-slate-50">
+        <!-- Header -->
+        <header class="bg-white border-b border-slate-200 shadow-sm">
+            <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-black text-slate-800">SERVICE<span class="text-sky-400">POOL</span></h1>
+                    <p class="text-sm text-slate-400">Tekliflerim</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/customer/orders" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-medium">
+                        <i class="fa-solid fa-shopping-cart mr-2"></i> Siparişlerim
+                    </a>
+                    <a href="/dashboard" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-all font-medium">
+                        <i class="fa-solid fa-arrow-left mr-2"></i> Dashboard
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <div class="max-w-7xl mx-auto px-6 py-8">
+            <!-- Tarih Filtreleme -->
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-6 mb-6">
+                <h2 class="text-xl font-black text-slate-800 mb-4">Tarih Filtreleme</h2>
+                <form method="GET" action="/customer/offers" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input type="hidden" name="token" value="{{ token }}">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Başlangıç Tarihi</label>
+                        <input type="date" name="start_date" value="{{ start_date }}" 
+                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Bitiş Tarihi</label>
+                        <input type="date" name="end_date" value="{{ end_date }}" 
+                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                    </div>
+                    <div class="flex items-end">
+                        <button type="submit" class="w-full px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-all font-medium">
+                            <i class="fa-solid fa-filter mr-2"></i> Filtrele
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Offer Listesi -->
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+                <div class="p-6 border-b border-slate-200 bg-gradient-to-r from-sky-50 to-blue-50">
+                    <h2 class="text-2xl font-black text-slate-800 flex items-center">
+                        <i class="fa-solid fa-file-invoice mr-3 text-sky-600"></i>
+                        Teklifler
+                    </h2>
+                    <p class="text-sm text-slate-500 mt-1">Tekliflerinizi görüntüleyin ve kabul edin</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 border-b-2 border-slate-200">
+                            <tr>
+                                <th class="px-6 py-4 text-xs font-black text-slate-600 uppercase tracking-widest">Teklif ID</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-600 uppercase tracking-widest">Tarih</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-600 uppercase tracking-widest">Durum</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-600 uppercase tracking-widest">Toplam Tutar</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-600 uppercase tracking-widest text-center">İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            {% if offers %}
+                            {% for offer in offers %}
+                            <tr class="hover:bg-sky-50/50 transition-colors">
+                                <td class="px-6 py-4 font-black text-sky-600">#{{ offer.OfferNo }}</td>
+                                <td class="px-6 py-4 font-medium text-slate-600">{{ offer.OfferDate.strftime('%d.%m.%Y') if offer.OfferDate else '-' }}</td>
+                                <td class="px-6 py-4">
+                                    {% if offer.Status == 'NotAccepted' %}
+                                    <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold">Beklemede</span>
+                                    {% elif offer.Status == 'Accepted' %}
+                                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold">Kabul Edildi</span>
+                                    {% elif offer.Status == 'Rejected' %}
+                                    <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-bold">Reddedildi</span>
+                                    {% else %}
+                                    <span class="px-3 py-1 bg-slate-100 text-slate-800 rounded-full text-xs font-bold">{{ offer.Status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 font-bold text-slate-800">{{ "{:,.2f}".format(offer.TotalAmount) if offer.TotalAmount else '0.00' }} ₺</td>
+                                <td class="px-6 py-4 text-center">
+                                    <div class="flex justify-center space-x-2">
+                                        <button data-offer-id="{{ offer.OfferNo }}" class="view-offer-detail-btn px-4 py-2 bg-sky-50 text-sky-600 hover:bg-sky-600 hover:text-white rounded-xl transition-all font-medium text-sm">
+                                            <i class="fa-solid fa-eye mr-1"></i> Detay
+                                        </button>
+                                        {% if offer.Status == 'NotAccepted' %}
+                                        <button data-offer-id="{{ offer.OfferNo }}" class="accept-offer-btn px-4 py-2 bg-green-50 text-green-600 hover:bg-green-600 hover:text-white rounded-xl transition-all font-medium text-sm">
+                                            <i class="fa-solid fa-check mr-1"></i> Kabul Et
+                                        </button>
+                                        {% elif offer.Status == 'Accepted' %}
+                                        <a href="/customer/orders" class="px-4 py-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white rounded-xl transition-all font-medium text-sm">
+                                            <i class="fa-solid fa-check-circle mr-1"></i> Siparişlere Git
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="px-6 py-12 text-center text-slate-400">
+                                    <i class="fa-solid fa-inbox text-4xl mb-4 opacity-50"></i>
+                                    <p class="text-lg font-medium">Henüz teklif bulunmuyor</p>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Offer Detay Modal -->
+    <div id="offer-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" onclick="closeOfferModal(event)">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-black text-slate-800">Teklif Detayları</h2>
+                <button onclick="closeOfferModal(event)" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div id="offer-details-content">
+                <!-- Detaylar buraya yüklenecek -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Event delegation for offer buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.view-offer-detail-btn')) {
+                    const btn = e.target.closest('.view-offer-detail-btn');
+                    const offerId = parseInt(btn.getAttribute('data-offer-id'));
+                    viewOfferDetails(offerId);
+                } else if (e.target.closest('.accept-offer-btn')) {
+                    const btn = e.target.closest('.accept-offer-btn');
+                    const offerId = parseInt(btn.getAttribute('data-offer-id'));
+                    acceptOffer(offerId);
+                }
+            });
+        });
+
+        async function viewOfferDetails(offerId) {
+            try {
+                const response = await fetch(`/customer/offers/${offerId}/details`, {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                let html = `
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-sm font-bold text-slate-700">Teklif ID</label>
+                                <p class="text-lg font-black text-slate-800">#${data.offer.OfferNo}</p>
+                            </div>
+                            <div>
+                                <label class="text-sm font-bold text-slate-700">Tarih</label>
+                                <p class="text-lg font-medium text-slate-800">${new Date(data.offer.OfferDate).toLocaleDateString('tr-TR')}</p>
+                            </div>
+                            <div>
+                                <label class="text-sm font-bold text-slate-700">Durum</label>
+                                <p class="text-lg font-medium text-slate-800">${data.offer.Status}</p>
+                            </div>
+                            <div>
+                                <label class="text-sm font-bold text-slate-700">Toplam Tutar</label>
+                                <p class="text-lg font-black text-sky-600">${parseFloat(data.offer.TotalAmount).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ₺</p>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-black text-slate-800 mb-4">Ürünler</h3>
+                            <table class="w-full text-left border-collapse">
+                                <thead class="bg-slate-50 border-b border-slate-200">
+                                    <tr>
+                                        <th class="px-4 py-3 text-xs font-black text-slate-400 uppercase">Ürün Adı</th>
+                                        <th class="px-4 py-3 text-xs font-black text-slate-400 uppercase">Açıklama</th>
+                                        <th class="px-4 py-3 text-xs font-black text-slate-400 uppercase text-center">Miktar</th>
+                                        <th class="px-4 py-3 text-xs font-black text-slate-400 uppercase text-right">Birim Fiyat</th>
+                                        <th class="px-4 py-3 text-xs font-black text-slate-400 uppercase text-right">Toplam</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                `;
+                
+                data.offer_lines.forEach(line => {
+                    html += `
+                        <tr>
+                            <td class="px-4 py-3 font-bold text-slate-800">${line.ProductName || '-'}</td>
+                            <td class="px-4 py-3 text-slate-600">${line.Description || '-'}</td>
+                            <td class="px-4 py-3 text-center font-medium text-slate-700">${line.Quantity || 0}</td>
+                            <td class="px-4 py-3 text-right font-medium text-slate-700">${parseFloat(line.UnitPrice || 0).toLocaleString('tr-TR', {minimumFractionDigits: 2})} ₺</td>
+                            <td class="px-4 py-3 text-right font-bold text-slate-800">${parseFloat(line.TotalPrice || 0).toLocaleString('tr-TR', {minimumFractionDigits: 2})} ₺</td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('offer-details-content').innerHTML = html;
+                document.getElementById('offer-modal').classList.remove('hidden');
+                document.getElementById('offer-modal').classList.add('flex');
+            } catch (error) {
+                console.error('Error loading offer details:', error);
+                alert('Teklif detayları yüklenirken bir hata oluştu');
+            }
+        }
+
+        function closeOfferModal(event) {
+            if (event.target.id === 'offer-modal' || event.target.closest('button')) {
+                document.getElementById('offer-modal').classList.add('hidden');
+                document.getElementById('offer-modal').classList.remove('flex');
+            }
+        }
+
+        async function acceptOffer(offerId) {
+            if (!confirm('Bu teklifi kabul etmek istediğinizden emin misiniz?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/customer/offers/${offerId}/accept`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('Teklif başarıyla kabul edildi ve sipariş oluşturuldu!');
+                    window.location.href = `/customer/orders`;
+                } else {
+                    alert(data.detail || 'Teklif kabul edilirken bir hata oluştu');
+                }
+            } catch (error) {
+                console.error('Error accepting offer:', error);
+                alert('Teklif kabul edilirken bir hata oluştu');
+            }
+        }
+    </script>
+</body>
+</html>
+

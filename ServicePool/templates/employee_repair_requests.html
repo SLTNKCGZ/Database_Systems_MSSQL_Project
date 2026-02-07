@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>ServicePool | Tamir Talepleri</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen bg-slate-50">
+        <!-- Header -->
+        <header class="bg-white border-b border-slate-200 shadow-sm">
+            <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-black text-slate-800">SERVICE<span class="text-sky-400">POOL</span></h1>
+                    <p class="text-sm text-slate-400">Tamir Talepleri Yönetimi</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/dashboard?token={{ token }}&user_type=employee" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-all font-medium">
+                        <i class="fa-solid fa-arrow-left mr-2"></i> Dashboard
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <div class="max-w-7xl mx-auto px-6 py-8">
+            <!-- Tarih Filtreleme -->
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-6 mb-6">
+                <h2 class="text-xl font-black text-slate-800 mb-4">Tarih Filtreleme</h2>
+                <form method="GET" action="/employee/repair-requests" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input type="hidden" name="token" value="{{ token }}">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Başlangıç Tarihi</label>
+                        <input type="date" name="start_date" value="{{ start_date }}" 
+                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Bitiş Tarihi</label>
+                        <input type="date" name="end_date" value="{{ end_date }}" 
+                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                    </div>
+                    <div class="flex items-end">
+                        <button type="submit" class="w-full px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-all font-medium">
+                            <i class="fa-solid fa-filter mr-2"></i> Filtrele
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Repair Request Listesi -->
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+                <div class="p-6 border-b border-slate-200">
+                    <h2 class="text-2xl font-black text-slate-800">Tamir Talepleri</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Talep ID</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Tarih</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Müşteri</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Ürün</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Seri Numarası</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Durum</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Teknisyen</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest text-center">İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            {% if repair_requests %}
+                            {% for request in repair_requests %}
+                            <tr class="hover:bg-sky-50/50 transition-colors">
+                                <td class="px-6 py-4 font-black text-sky-600">#{{ request.RepairRequestID }}</td>
+                                <td class="px-6 py-4 font-medium text-slate-600">{{ request.RequestDate.strftime('%d.%m.%Y') if request.RequestDate else '-' }}</td>
+                                <td class="px-6 py-4 font-medium text-slate-700">{{ request.CompanyTradeName or '-' }}</td>
+                                <td class="px-6 py-4 font-medium text-slate-700">{{ request.SerialNumber or '-' }}</td>
+                                <td class="px-6 py-4">
+                                    {% if request.Status == 'Pending' %}
+                                    <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold">Beklemede</span>
+                                    {% elif request.Status == 'InProgress' %}
+                                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold">Devam Ediyor</span>
+                                    {% elif request.Status == 'Completed' %}
+                                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold">Tamamlandı</span>
+                                    {% elif request.Status == 'Cancelled' %}
+                                    <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-bold">İptal Edildi</span>
+                                    {% elif request.Status == 'Rejected' %}
+                                    <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-bold">Reddedildi</span>
+                                    {% else %}
+                                    <span class="px-3 py-1 bg-slate-100 text-slate-800 rounded-full text-xs font-bold">{{ request.Status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 font-medium text-slate-700">{{ request.TechnicianName or '-' }}</td>
+                                <td class="px-6 py-4 text-center">
+                                    <div class="flex justify-center space-x-2">
+                                        {% if request.Status == 'Pending' %}
+                                        <button data-request-id="{{ request.RepairRequestID }}" class="assign-technician-btn px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-xl transition-all font-medium text-sm">
+                                            <i class="fa-solid fa-user-plus mr-1"></i> Teknisyen Ata
+                                        </button>
+                                        <button data-request-id="{{ request.RepairRequestID }}" class="reject-request-btn px-4 py-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-xl transition-all font-medium text-sm">
+                                            <i class="fa-solid fa-times mr-1"></i> Reddet
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="8" class="px-6 py-12 text-center text-slate-400">
+                                    <i class="fa-solid fa-inbox text-4xl mb-4 opacity-50"></i>
+                                    <p class="text-lg font-medium">Henüz tamir talebi bulunmuyor</p>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Teknisyen Atama Modal -->
+    <div id="assign-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" onclick="closeAssignModal(event)">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-black text-slate-800">Teknisyen Ata</h2>
+                <button onclick="closeAssignModal(event)" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-2">Teknisyen Seç</label>
+                <select id="technician-select" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                    <option value="">Teknisyen Seçin</option>
+                    {% for tech in technicians %}
+                    <option value="{{ tech.TUserID }}">{{ tech.FirstName }} {{ tech.LastName }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mt-6 flex justify-end space-x-4">
+                <button onclick="closeAssignModal(event)" class="px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-medium">
+                    İptal
+                </button>
+                <button onclick="assignTechnician()" class="px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-all font-medium">
+                    Ata
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = '{{ token }}';
+        let currentRepairRequestId = null;
+
+        // Event delegation for buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.assign-technician-btn')) {
+                    const btn = e.target.closest('.assign-technician-btn');
+                    const repairRequestId = parseInt(btn.getAttribute('data-request-id'));
+                    openAssignModal(repairRequestId);
+                } else if (e.target.closest('.reject-request-btn')) {
+                    const btn = e.target.closest('.reject-request-btn');
+                    const repairRequestId = parseInt(btn.getAttribute('data-request-id'));
+                    rejectRequest(repairRequestId);
+                }
+            });
+        });
+
+        function openAssignModal(repairRequestId) {
+            currentRepairRequestId = repairRequestId;
+            document.getElementById('assign-modal').classList.remove('hidden');
+            document.getElementById('assign-modal').classList.add('flex');
+        }
+
+        function closeAssignModal(event) {
+            if (event.target.id === 'assign-modal' || event.target.closest('button')) {
+                document.getElementById('assign-modal').classList.add('hidden');
+                document.getElementById('assign-modal').classList.remove('flex');
+                currentRepairRequestId = null;
+                document.getElementById('technician-select').value = '';
+            }
+        }
+
+        function assignTechnician() {
+            const technicianId = document.getElementById('technician-select').value;
+            if (!technicianId) {
+                alert('Lütfen bir teknisyen seçin');
+                return;
+            }
+
+            fetch(`/employee/repair-requests/${currentRepairRequestId}/assign-technician?token=${token}&technician_id=${technicianId}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Teknisyen başarıyla atandı!');
+                    window.location.reload();
+                } else {
+                    alert(data.detail || 'Teknisyen atanırken bir hata oluştu');
+                }
+            })
+            .catch(error => {
+                console.error('Error assigning technician:', error);
+                alert('Teknisyen atanırken bir hata oluştu');
+            });
+        }
+
+        function rejectRequest(repairRequestId) {
+            if (!confirm('Bu tamir talebini reddetmek istediğinizden emin misiniz?')) {
+                return;
+            }
+
+            fetch(`/employee/repair-requests/${repairRequestId}/reject?token=${token}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Tamir talebi başarıyla reddedildi!');
+                    window.location.reload();
+                } else {
+                    alert(data.detail || 'Tamir talebi reddedilirken bir hata oluştu');
+                }
+            })
+            .catch(error => {
+                console.error('Error rejecting request:', error);
+                alert('Tamir talebi reddedilirken bir hata oluştu');
+            });
+        }
+    </script>
+</body>
+</html>
+

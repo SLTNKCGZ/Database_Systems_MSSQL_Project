@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>ServicePool | Profil</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen bg-slate-50">
+        <!-- Header -->
+        <header class="bg-white border-b border-slate-200 shadow-sm">
+            <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-black text-slate-800">SERVICE<span class="text-sky-400">POOL</span></h1>
+                    <p class="text-sm text-slate-400">Profil Yönetimi</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/dashboard" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-all font-medium">
+                        <i class="fa-solid fa-arrow-left mr-2"></i> Dashboard
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <div class="max-w-5xl mx-auto px-6 py-8">
+            <!-- Success/Error Messages -->
+            {% if request.query_params.get('success') %}
+            <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700">
+                <i class="fa-solid fa-check-circle mr-2"></i>
+                {% if request.query_params.get('success') == 'employee_updated' %}
+                    Profil bilgileri güncellendi.
+                {% elif request.query_params.get('success') == 'telno_added' %}
+                    Telefon numarası eklendi.
+                {% elif request.query_params.get('success') == 'telno_deleted' %}
+                    Telefon numarası silindi.
+                {% elif request.query_params.get('success') == 'email_added' %}
+                    Email adresi eklendi.
+                {% elif request.query_params.get('success') == 'email_deleted' %}
+                    Email adresi silindi.
+                {% elif request.query_params.get('success') == 'contact_updated' %}
+                    İletişim kişisi güncellendi.
+                {% elif request.query_params.get('success') == 'contact_deleted' %}
+                    İletişim kişisi silindi.
+                {% elif request.query_params.get('success') == 'password_changed' %}
+                    Şifre başarıyla değiştirildi.
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if request.query_params.get('error') %}
+            <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700">
+                <i class="fa-solid fa-exclamation-circle mr-2"></i>
+                {% if request.query_params.get('error') == 'wrong_password' %}
+                    Mevcut şifre yanlış.
+                {% elif request.query_params.get('error') == 'password_mismatch' %}
+                    Yeni şifreler eşleşmiyor.
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if error %}
+            <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700">
+                <i class="fa-solid fa-exclamation-circle mr-2"></i>
+                Hata: {{ error }}
+            </div>
+            {% endif %}
+
+            {% if customer %}
+            <!-- Customer Bilgileri -->
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-8 mb-6">
+                <h2 class="text-2xl font-black text-slate-800 mb-6 flex items-center">
+                    <i class="fa-solid fa-building mr-3 text-sky-500"></i>
+                    Şirket Bilgileri
+                </h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Şirket Ticari Adı</label>
+                        <p class="text-lg font-medium text-slate-800">{{ customer.CompanyTradeName or '-' }}</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Ticaret Sicil No</label>
+                        <p class="text-lg font-medium text-slate-800">{{ customer.TradeRegistryNumber or '-' }}</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Vergi Dairesi</label>
+                        <p class="text-lg font-medium text-slate-800">{{ customer.TaxOffice or '-' }}</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Vergi Numarası</label>
+                        <p class="text-lg font-medium text-slate-800">{{ customer.TaxNumber or '-' }}</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Website</label>
+                        <p class="text-lg font-medium text-slate-800">{{ customer.Website or '-' }}</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Kuruluş Yılı</label>
+                        <p class="text-lg font-medium text-slate-800">{{ customer.YearOfEstablishment or '-' }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- İletişim Kişileri -->
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-8 mb-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-black text-slate-800 flex items-center">
+                        <i class="fa-solid fa-users mr-3 text-sky-500"></i>
+                        İletişim Kişileri
+                    </h2>
+                    <button onclick="showAddCustomerContactModal()" class="px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-all font-medium">
+                        <i class="fa-solid fa-plus mr-2"></i> Yeni Kişi Ekle
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b-2 border-slate-200">
+                                <th class="text-left py-3 px-4 font-bold text-slate-700">Departman</th>
+                                <th class="text-left py-3 px-4 font-bold text-slate-700">Ad Soyad</th>
+                                <th class="text-left py-3 px-4 font-bold text-slate-700">Telefon</th>
+                                <th class="text-left py-3 px-4 font-bold text-slate-700">Email</th>
+                                <th class="text-right py-3 px-4 font-bold text-slate-700">İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if customer_contacts %}
+                            {% for contact in customer_contacts %}
+                            <tr class="border-b border-slate-100 hover:bg-slate-50">
+                                <td class="py-3 px-4 text-slate-700">{{ contact.DepartmentName or '-' }}</td>
+                                <td class="py-3 px-4 text-slate-700">{{ contact.FullName or (contact.FirstName + ' ' + contact.LastName) }}</td>
+                                <td class="py-3 px-4 text-slate-700">{{ contact.FullTelNo or contact.TelNo or '-' }}</td>
+                                <td class="py-3 px-4 text-slate-700">{{ contact.MailAddress or '-' }}</td>
+                                <td class="py-3 px-4 text-right">
+                                    <div class="flex justify-end space-x-2">
+                                        <button onclick="showEditCustomerContactModal('{{ contact.MailAddress }}', '{{ contact.DepartmentName }}', '{{ contact.FirstName }}', '{% if contact.MiddleName %}{{ contact.MiddleName }}{% endif %}', '{{ contact.LastName }}', '{% if contact.TelCode %}{{ contact.TelCode }}{% else %}+90{% endif %}', '{{ contact.TelNo }}')" class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-all text-sm">
+                                            <i class="fa-solid fa-edit mr-1"></i> Düzenle
+                                        </button>
+                                        <button onclick="showDeleteCustomerContactModal('{{ contact.MailAddress }}', '{% if contact.FullName %}{{ contact.FullName }}{% else %}{{ contact.FirstName }} {{ contact.LastName }}{% endif %}')" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-all text-sm">
+                                            <i class="fa-solid fa-trash-alt mr-1"></i> Sil
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="py-8 text-center text-slate-400">
+                                    <i class="fa-solid fa-users-slash text-3xl mb-2 block"></i>
+                                    Henüz iletişim kişisi eklenmemiş
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% elif employee %}
+            <!-- Employee Bilgileri -->
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-8 mb-6">
+                <h2 class="text-2xl font-black text-slate-800 mb-6 flex items-center">
+                    <i class="fa-solid fa-user mr-3 text-sky-500"></i>
+                    Kişisel Bilgiler
+                </h2>
+
+                <form method="POST" action="/profile/update-employee" class="space-y-6">
+                    <input type="hidden" name="token" value="{{ token }}">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Ad</label>
+                            <input type="text" name="first_name" value="{{ employee.FirstName or '' }}" required
+                                class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Soyad</label>
+                            <input type="text" name="last_name" value="{{ employee.LastName or '' }}" required
+                                class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Orta Ad</label>
+                            <input type="text" name="middle_name" value="{{ employee.MiddleName or '' }}"
+                                class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-2">Doğum Tarihi</label>
+                            <input type="date" name="birth_date" 
+                                value="{% if employee.BirthDate %}{{ employee.BirthDate.strftime('%Y-%m-%d') }}{% endif %}"
+                                class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                        </div>
+                    </div>
+
+                    <div class="pt-4">
+                        <button type="submit" class="px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-all font-medium">
+                            <i class="fa-solid fa-save mr-2"></i> Bilgileri Güncelle
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Telefon Numaraları -->
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-8 mb-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-black text-slate-800 flex items-center">
+                        <i class="fa-solid fa-phone mr-3 text-sky-500"></i>
+                        Telefon Numaraları
+                    </h2>
+                    <button onclick="showAddEmployeeTelnoModal()" class="px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-all font-medium">
+                        <i class="fa-solid fa-plus mr-2"></i> Ekle
+                    </button>
+                </div>
+
+                <div class="space-y-4 mb-6">
+                    {% if tel_numbers %}
+                    {% for tel_item in tel_numbers %}
+                    <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
+                        <span class="font-medium text-slate-700">
+                            {% if tel_item.fulltelno %}
+                                {{ tel_item.fulltelno }}
+                            {% elif tel_item.telno %}
+                                {{ tel_item.telno }}
+                            {% else %}
+                                {{ tel_item }}
+                            {% endif %}
+                        </span>
+                        <button onclick="showDeleteEmployeeTelnoModal('{% if tel_item.telcode %}{{ tel_item.telcode }}{% endif %}', '{% if tel_item.telno %}{{ tel_item.telno }}{% endif %}')" class="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-all">
+                            <i class="fa-solid fa-trash-alt"></i>
+                        </button>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-slate-400 text-center py-4">Henüz telefon numarası eklenmemiş</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Email Adresleri -->
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-8 mb-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-black text-slate-800 flex items-center">
+                        <i class="fa-solid fa-envelope mr-3 text-sky-500"></i>
+                        Email Adresleri
+                    </h2>
+                    <button onclick="showAddEmployeeEmailModal()" class="px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-all font-medium">
+                        <i class="fa-solid fa-plus mr-2"></i> Ekle
+                    </button>
+                </div>
+
+                <div class="space-y-4 mb-6">
+                    {% if email_addresses %}
+                    {% for email in email_addresses %}
+                    <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
+                        <span class="font-medium text-slate-700">{{ email }}</span>
+                        <button onclick="showDeleteEmployeeEmailModal('{{ email }}')" class="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition-all">
+                            <i class="fa-solid fa-trash-alt"></i>
+                        </button>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p class="text-slate-400 text-center py-4">Henüz email adresi eklenmemiş</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Şifre Değiştirme -->
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-8">
+                <h2 class="text-2xl font-black text-slate-800 mb-6 flex items-center">
+                    <i class="fa-solid fa-lock mr-3 text-sky-500"></i>
+                    Şifre Değiştir
+                </h2>
+
+                <form method="POST" action="/profile/change-password" class="space-y-6">
+                    <input type="hidden" name="token" value="{{ token }}">
+                    
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Mevcut Şifre</label>
+                        <input type="password" name="current_password" required
+                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Yeni Şifre</label>
+                        <input type="password" name="new_password" required
+                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Yeni Şifre (Tekrar)</label>
+                        <input type="password" name="confirm_password" required
+                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                    </div>
+
+                    <div class="pt-4">
+                        <button type="submit" class="px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-all font-medium">
+                            <i class="fa-solid fa-key mr-2"></i> Şifreyi Değiştir
+                        </button>
+                    </div>
+                </form>
+            </div>
+            {% else %}
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-8 text-center">
+                <p class="text-slate-400">Profil bilgileri yüklenemedi.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Customer İletişim Kişisi Ekleme Modal -->
+    <div id="add-customer-contact-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" onclick="closeAddCustomerContactModal(event)">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-black text-slate-800">Yeni İletişim Kişisi Ekle</h2>
+                <button onclick="closeAddCustomerContactModal(event)" class="close-modal-btn text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-times text-2xl"></i>
+                </button>
+            </div>
+            <form method="POST" action="/profile/add-customer-telno" class="space-y-4">
+                <input type="hidden" name="token" value="{{ token }}">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Departman *</label>
+                    <input type="text" name="department_name" required placeholder="Örn: Finans, Satın Alma, IT"
+                        class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Ad *</label>
+                    <input type="text" name="first_name" required
+                        class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">İkinci Ad</label>
+                    <input type="text" name="middle_name"
+                        class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Soyad *</label>
+                    <input type="text" name="last_name" required
+                        class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Telefon Kodu</label>
+                    <input type="text" name="telcode" placeholder="+90" value="+90"
+                        class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Telefon Numarası *</label>
+                    <input type="text" name="telno" required placeholder="5551234567"
+                        class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Email Adresi *</label>
+                    <input type="email" name="mail_address" required
+                        class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                </div>
+                <div class="mt-6 flex justify-end space-x-4">
+                    <button type="button" onclick="closeAddCustomerContactModal(event)" class="close-modal-btn px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-medium">
+                        İptal
+                    </button>
+                    <button type="submit" class="px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-all font-medium">
+                        <i class="fa-solid fa-plus mr-2"></i> Ekle
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Customer İletişim Kişisi Düzenleme Modal -->
+    <div id="edit-customer-contact-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" onclick="closeEditCustomerContactModal(event)">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-black text-slate-800">İletişim Kişisi Düzenle</h2>
+                <button onclick="closeEditCustomerContactModal(event)" class="close-modal-btn text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-times text-2xl"></i>
+                </button>
+            </div>
+            <form method="POST" action="/profile/update-customer-contact" class="space-y-4">
+                <input type="hidden" name="token" value="{{ token }}">
+                <input type="hidden" name="old_mail_address" id="edit-contact-old-mail-address">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Departman *</label>
+                    <input type="text" name="department_name" id="edit-contact-department" required placeholder="Örn: Finans, Satın Alma, IT"
+                        class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Ad *</label>
+                    <input type="text" name="first_name" id="edit-contact-first-name" required
+                        class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">İkinci Ad</label>
+                    <input type="text" name="middle_name" id="edit-contact-middle-name"
+                        class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Soyad *</label>
+                    <input type="text" name="last_name" id="edit-contact-last-name" required
+                        class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Telefon Kodu</label>
+                    <input type="text" name="telcode" id="edit-contact-telcode" placeholder="+90"
+                        class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Telefon Numarası *</label>
+                    <input type="text" name="telno" id="edit-contact-telno" required placeholder="5551234567"
+                        class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Email Adresi *</label>
+                    <input type="email" name="mail_address" id="edit-contact-mail-address" required
+                        class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                </div>
+                <div class="mt-6 flex justify-end space-x-4">
+                    <button type="button" onclick="closeEditCustomerContactModal(event)" class="close-modal-btn px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-medium">
+                        İptal
+                    </button>
+                    <button type="submit" class="px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-all font-medium">
+                        <i class="fa-solid fa-save mr-2"></i> Kaydet
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Customer İletişim Kişisi Silme Modal -->
+    <div id="delete-customer-contact-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" onclick="closeDeleteCustomerContactModal(event)">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-black text-slate-800">İletişim Kişisi Sil</h2>
+                <button onclick="closeDeleteCustomerContactModal(event)" class="close-modal-btn text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-times text-2xl"></i>
+                </button>
+            </div>
+            <p class="text-slate-600 mb-6">Bu iletişim kişisini silmek istediğinizden emin misiniz?</p>
+            <p class="text-slate-800 font-bold mb-6" id="delete-contact-display"></p>
+            <form method="POST" action="/profile/delete-customer-contact" id="delete-contact-form">
+                <input type="hidden" name="token" value="{{ token }}">
+                <input type="hidden" name="mail_address" id="delete-contact-mail-address">
+                <div class="flex justify-end space-x-4">
+                    <button type="button" onclick="closeDeleteCustomerContactModal(event)" class="close-modal-btn px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-medium">
+                        İptal
+                    </button>
+                    <button type="submit" class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all font-medium">
+                        <i class="fa-solid fa-trash-alt mr-2"></i> Sil
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Employee Telefon Ekleme Modal -->
+    <div id="add-employee-telno-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" onclick="closeAddEmployeeTelnoModal(event)">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-black text-slate-800">Telefon Numarası Ekle</h2>
+                <button onclick="closeAddEmployeeTelnoModal(event)" class="close-modal-btn text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-times text-2xl"></i>
+                </button>
+            </div>
+            <form method="POST" action="/profile/add-telno" class="space-y-4">
+                <input type="hidden" name="token" value="{{ token }}">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Telefon Kodu</label>
+                    <input type="text" name="telcode" placeholder="+90" value="+90"
+                        class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Telefon Numarası *</label>
+                    <input type="text" name="telno" required placeholder="5551234567"
+                        class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                </div>
+                <div class="mt-6 flex justify-end space-x-4">
+                    <button type="button" onclick="closeAddEmployeeTelnoModal(event)" class="close-modal-btn px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-medium">
+                        İptal
+                    </button>
+                    <button type="submit" class="px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-all font-medium">
+                        <i class="fa-solid fa-plus mr-2"></i> Ekle
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Employee Telefon Silme Modal -->
+    <div id="delete-employee-telno-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" onclick="closeDeleteEmployeeTelnoModal(event)">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-black text-slate-800">Telefon Numarası Sil</h2>
+                <button onclick="closeDeleteEmployeeTelnoModal(event)" class="close-modal-btn text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-times text-2xl"></i>
+                </button>
+            </div>
+            <p class="text-slate-600 mb-6">Bu telefon numarasını silmek istediğinizden emin misiniz?</p>
+            <p class="text-slate-800 font-bold mb-6" id="delete-employee-telno-display"></p>
+            <form method="POST" action="/profile/delete-telno" id="delete-employee-telno-form">
+                <input type="hidden" name="token" value="{{ token }}">
+                <input type="hidden" name="telcode" id="delete-employee-telno-telcode">
+                <input type="hidden" name="telno" id="delete-employee-telno-telno">
+                <div class="flex justify-end space-x-4">
+                    <button type="button" onclick="closeDeleteEmployeeTelnoModal(event)" class="close-modal-btn px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-medium">
+                        İptal
+                    </button>
+                    <button type="submit" class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all font-medium">
+                        <i class="fa-solid fa-trash-alt mr-2"></i> Sil
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Employee Email Ekleme Modal -->
+    <div id="add-employee-email-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" onclick="closeAddEmployeeEmailModal(event)">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-black text-slate-800">Email Adresi Ekle</h2>
+                <button onclick="closeAddEmployeeEmailModal(event)" class="close-modal-btn text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-times text-2xl"></i>
+                </button>
+            </div>
+            <form method="POST" action="/profile/add-email" class="space-y-4">
+                <input type="hidden" name="token" value="{{ token }}">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Email Adresi *</label>
+                    <input type="email" name="email" required
+                        class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                </div>
+                <div class="mt-6 flex justify-end space-x-4">
+                    <button type="button" onclick="closeAddEmployeeEmailModal(event)" class="close-modal-btn px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-medium">
+                        İptal
+                    </button>
+                    <button type="submit" class="px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-all font-medium">
+                        <i class="fa-solid fa-plus mr-2"></i> Ekle
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Employee Email Silme Modal -->
+    <div id="delete-employee-email-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" onclick="closeDeleteEmployeeEmailModal(event)">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-black text-slate-800">Email Adresi Sil</h2>
+                <button onclick="closeDeleteEmployeeEmailModal(event)" class="close-modal-btn text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-times text-2xl"></i>
+                </button>
+            </div>
+            <p class="text-slate-600 mb-6">Bu email adresini silmek istediğinizden emin misiniz?</p>
+            <p class="text-slate-800 font-bold mb-6" id="delete-employee-email-display"></p>
+            <form method="POST" action="/profile/delete-email" id="delete-employee-email-form">
+                <input type="hidden" name="token" value="{{ token }}">
+                <input type="hidden" name="email" id="delete-employee-email-email">
+                <div class="flex justify-end space-x-4">
+                    <button type="button" onclick="closeDeleteEmployeeEmailModal(event)" class="close-modal-btn px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-medium">
+                        İptal
+                    </button>
+                    <button type="submit" class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl transition-all font-medium">
+                        <i class="fa-solid fa-trash-alt mr-2"></i> Sil
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Customer İletişim Kişisi Modal Functions
+        function showAddCustomerContactModal() {
+            document.getElementById('add-customer-contact-modal').classList.remove('hidden');
+            document.getElementById('add-customer-contact-modal').classList.add('flex');
+        }
+
+        function closeAddCustomerContactModal(event) {
+            if (event.target.id === 'add-customer-contact-modal' || event.target.closest('.close-modal-btn')) {
+                document.getElementById('add-customer-contact-modal').classList.add('hidden');
+                document.getElementById('add-customer-contact-modal').classList.remove('flex');
+            }
+        }
+
+        function showEditCustomerContactModal(mailAddress, department, firstName, middleName, lastName, telCode, telNo) {
+            document.getElementById('edit-contact-old-mail-address').value = mailAddress || '';
+            document.getElementById('edit-contact-department').value = department || '';
+            document.getElementById('edit-contact-first-name').value = firstName || '';
+            document.getElementById('edit-contact-middle-name').value = middleName || '';
+            document.getElementById('edit-contact-last-name').value = lastName || '';
+            document.getElementById('edit-contact-telcode').value = telCode || '+90';
+            document.getElementById('edit-contact-telno').value = telNo || '';
+            document.getElementById('edit-contact-mail-address').value = mailAddress || '';
+            document.getElementById('edit-customer-contact-modal').classList.remove('hidden');
+            document.getElementById('edit-customer-contact-modal').classList.add('flex');
+        }
+
+        function closeEditCustomerContactModal(event) {
+            if (event.target.id === 'edit-customer-contact-modal' || event.target.closest('.close-modal-btn')) {
+                document.getElementById('edit-customer-contact-modal').classList.add('hidden');
+                document.getElementById('edit-customer-contact-modal').classList.remove('flex');
+            }
+        }
+
+        function showDeleteCustomerContactModal(mailAddress, fullName) {
+            document.getElementById('delete-contact-display').textContent = fullName + ' (' + mailAddress + ')';
+            document.getElementById('delete-contact-mail-address').value = mailAddress;
+            document.getElementById('delete-customer-contact-modal').classList.remove('hidden');
+            document.getElementById('delete-customer-contact-modal').classList.add('flex');
+        }
+
+        function closeDeleteCustomerContactModal(event) {
+            if (event.target.id === 'delete-customer-contact-modal' || event.target.closest('.close-modal-btn')) {
+                document.getElementById('delete-customer-contact-modal').classList.add('hidden');
+                document.getElementById('delete-customer-contact-modal').classList.remove('flex');
+            }
+        }
+
+        // Employee Telefon Modal Functions
+        function showAddEmployeeTelnoModal() {
+            document.getElementById('add-employee-telno-modal').classList.remove('hidden');
+            document.getElementById('add-employee-telno-modal').classList.add('flex');
+        }
+
+        function closeAddEmployeeTelnoModal(event) {
+            if (event.target.id === 'add-employee-telno-modal' || event.target.closest('.close-modal-btn')) {
+                document.getElementById('add-employee-telno-modal').classList.add('hidden');
+                document.getElementById('add-employee-telno-modal').classList.remove('flex');
+            }
+        }
+
+        function showDeleteEmployeeTelnoModal(telcode, telno) {
+            document.getElementById('delete-employee-telno-display').textContent = (telcode ? telcode + ' ' : '') + telno;
+            document.getElementById('delete-employee-telno-telcode').value = telcode || '';
+            document.getElementById('delete-employee-telno-telno').value = telno;
+            document.getElementById('delete-employee-telno-modal').classList.remove('hidden');
+            document.getElementById('delete-employee-telno-modal').classList.add('flex');
+        }
+
+        function closeDeleteEmployeeTelnoModal(event) {
+            if (event.target.id === 'delete-employee-telno-modal' || event.target.closest('.close-modal-btn')) {
+                document.getElementById('delete-employee-telno-modal').classList.add('hidden');
+                document.getElementById('delete-employee-telno-modal').classList.remove('flex');
+            }
+        }
+
+        // Employee Email Modal Functions
+        function showAddEmployeeEmailModal() {
+            document.getElementById('add-employee-email-modal').classList.remove('hidden');
+            document.getElementById('add-employee-email-modal').classList.add('flex');
+        }
+
+        function closeAddEmployeeEmailModal(event) {
+            if (event.target.id === 'add-employee-email-modal' || event.target.closest('.close-modal-btn')) {
+                document.getElementById('add-employee-email-modal').classList.add('hidden');
+                document.getElementById('add-employee-email-modal').classList.remove('flex');
+            }
+        }
+
+        function showDeleteEmployeeEmailModal(email) {
+            document.getElementById('delete-employee-email-display').textContent = email;
+            document.getElementById('delete-employee-email-email').value = email;
+            document.getElementById('delete-employee-email-modal').classList.remove('hidden');
+            document.getElementById('delete-employee-email-modal').classList.add('flex');
+        }
+
+        function closeDeleteEmployeeEmailModal(event) {
+            if (event.target.id === 'delete-employee-email-modal' || event.target.closest('.close-modal-btn')) {
+                document.getElementById('delete-employee-email-modal').classList.add('hidden');
+                document.getElementById('delete-employee-email-modal').classList.remove('flex');
+            }
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>ServicePool | Tamir Talepleri</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen bg-slate-50">
+        <!-- Header -->
+        <header class="bg-white border-b border-slate-200 shadow-sm">
+            <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-black text-slate-800">SERVICE<span class="text-sky-400">POOL</span></h1>
+                    <p class="text-sm text-slate-400">Tamir Talepleri</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/customer/orders" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-medium">
+                        <i class="fa-solid fa-shopping-cart mr-2"></i> Siparişlerim
+                    </a>
+                    <a href="/customer/offers" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-medium">
+                        <i class="fa-solid fa-file-invoice mr-2"></i> Tekliflerim
+                    </a>
+                    <a href="/dashboard" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-all font-medium">
+                        <i class="fa-solid fa-arrow-left mr-2"></i> Dashboard
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <div class="max-w-7xl mx-auto px-6 py-8">
+            <!-- Tarih Filtreleme -->
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-6 mb-6">
+                <h2 class="text-xl font-black text-slate-800 mb-4">Tarih Filtreleme</h2>
+                <form method="GET" action="/customer/repair-requests" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input type="hidden" name="token" value="{{ token }}">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Başlangıç Tarihi</label>
+                        <input type="date" name="start_date" value="{{ start_date }}" 
+                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Bitiş Tarihi</label>
+                        <input type="date" name="end_date" value="{{ end_date }}" 
+                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                    </div>
+                    <div class="flex items-end">
+                        <button type="submit" class="w-full px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-all font-medium">
+                            <i class="fa-solid fa-filter mr-2"></i> Filtrele
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Repair Request Listesi -->
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+                <div class="p-6 border-b border-slate-200 bg-gradient-to-r from-orange-50 to-red-50 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-black text-slate-800 flex items-center">
+                            <i class="fa-solid fa-wrench mr-3 text-orange-600"></i>
+                            Tamir Talepleri
+                        </h2>
+                        <p class="text-sm text-slate-500 mt-1">Tamir taleplerinizi görüntüleyin ve yeni talep oluşturun</p>
+                    </div>
+                    <button onclick="showCreateRepairRequestModal()" class="px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-xl transition-all font-medium">
+                        <i class="fa-solid fa-plus mr-2"></i> Yeni Tamir Talebi
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Talep ID</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Tarih</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Ürün</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Seri Numarası</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Durum</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest text-center">İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            {% if repair_requests %}
+                            {% for request in repair_requests %}
+                            <tr class="hover:bg-sky-50/50 transition-colors">
+                                <td class="px-6 py-4 font-black text-sky-600">#{{ request.RepairRequestID }}</td>
+                                <td class="px-6 py-4 font-medium text-slate-600">{{ request.RequestDate.strftime('%d.%m.%Y') if request.RequestDate else '-' }}</td>
+                                <td class="px-6 py-4 font-medium text-slate-700">{{ request.ProductName or '-' }}</td>
+                                <td class="px-6 py-4 text-slate-600">{{ request.SerialNumber or '-' }}</td>
+                                <td class="px-6 py-4">
+                                    {% if request.Status == 'Pending' %}
+                                    <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold">Beklemede</span>
+                                    {% elif request.Status == 'InProgress' %}
+                                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold">Devam Ediyor</span>
+                                    {% elif request.Status == 'Completed' %}
+                                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold">Tamamlandı</span>
+                                    {% elif request.Status == 'Cancelled' %}
+                                    <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-bold">İptal Edildi</span>
+                                    {% elif request.Status == 'Rejected' %}
+                                    <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-bold">Reddedildi</span>
+                                    {% else %}
+                                    <span class="px-3 py-1 bg-slate-100 text-slate-800 rounded-full text-xs font-bold">{{ request.Status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    {% if request.Status == 'Pending' or request.Status == 'InProgress' %}
+                                    <button data-request-id="{{ request.RepairRequestID }}" class="cancel-repair-request-btn px-4 py-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-xl transition-all font-medium text-sm">
+                                        <i class="fa-solid fa-times mr-1"></i> İptal Et
+                                    </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="px-6 py-12 text-center text-slate-400">
+                                    <i class="fa-solid fa-inbox text-4xl mb-4 opacity-50"></i>
+                                    <p class="text-lg font-medium">Henüz tamir talebi bulunmuyor</p>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Repair Request Modal -->
+    <div id="repair-request-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" onclick="closeRepairRequestModal(event)">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-black text-slate-800">Yeni Tamir Talebi</h2>
+                <button onclick="closeRepairRequestModal(event)" class="close-repair-modal-btn text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Ürün Seçin</label>
+                    <select id="repair-serial-number" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none" required>
+                        <option value="">Ürün seçin...</option>
+                    </select>
+                    <p class="text-xs text-slate-500 mt-1">Sahip olduğunuz ürünlerden birini seçin</p>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-4">
+                <button onclick="closeRepairRequestModal(event)" class="close-repair-modal-btn px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-medium">
+                    İptal
+                </button>
+                <button onclick="submitRepairRequest()" class="px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-xl transition-all font-medium">
+                    <i class="fa-solid fa-wrench mr-2"></i> Oluştur
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Event delegation for cancel buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.cancel-repair-request-btn')) {
+                    const btn = e.target.closest('.cancel-repair-request-btn');
+                    const repairRequestId = parseInt(btn.getAttribute('data-request-id'));
+                    cancelRepairRequest(repairRequestId);
+                }
+            });
+        });
+
+        async function showCreateRepairRequestModal() {
+            // Product'ları yükle
+            try {
+                const response = await fetch('/customer/products/api', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                const select = document.getElementById('repair-serial-number');
+                select.innerHTML = '<option value="">Ürün seçin...</option>';
+                
+                if (data.products && data.products.length > 0) {
+                    data.products.forEach(product => {
+                        // Sadece IsRepair = 0 olan product'ları göster
+                        if (product.IsRepair === 0 || product.IsRepair === false) {
+                            const option = document.createElement('option');
+                            option.value = product.SerialNumber;
+                            option.textContent = `${product.SerialNumber} - ${product.ProductName || 'Ürün'} (${product.ProductType || 'N/A'})`;
+                            select.appendChild(option);
+                        }
+                    });
+                } else {
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'Ürün bulunamadı';
+                    option.disabled = true;
+                    select.appendChild(option);
+                }
+            } catch (error) {
+                console.error('Error loading products:', error);
+                alert('Ürünler yüklenirken bir hata oluştu');
+            }
+            
+            document.getElementById('repair-request-modal').classList.remove('hidden');
+            document.getElementById('repair-request-modal').classList.add('flex');
+        }
+
+        function closeRepairRequestModal(event) {
+            if (event.target.id === 'repair-request-modal' || event.target.closest('.close-repair-modal-btn')) {
+                document.getElementById('repair-request-modal').classList.add('hidden');
+                document.getElementById('repair-request-modal').classList.remove('flex');
+            }
+        }
+
+        function submitRepairRequest() {
+            const serialNumber = document.getElementById('repair-serial-number').value;
+            
+            if (!serialNumber || !serialNumber.trim()) {
+                alert('Lütfen bir ürün seçin');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('serial_number', serialNumber);
+            
+            fetch('/customer/repair-requests/create', {
+                method: 'POST',
+                body: formData,
+                credentials: 'include'
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Tamir talebi oluşturulurken bir hata oluştu');
+                }
+                return data;
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Tamir talebi başarıyla oluşturuldu!');
+                    window.location.reload();
+                } else {
+                    alert(data.detail || 'Tamir talebi oluşturulurken bir hata oluştu');
+                }
+            })
+            .catch(error => {
+                console.error('Error creating repair request:', error);
+                alert(error.message || 'Tamir talebi oluşturulurken bir hata oluştu');
+            });
+        }
+
+        function cancelRepairRequest(repairRequestId) {
+            if (!confirm('Bu tamir talebini iptal etmek istediğinizden emin misiniz?')) {
+                return;
+            }
+            
+            fetch(`/customer/repair-requests/${repairRequestId}/cancel`, {
+                method: 'POST',
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Tamir talebi başarıyla iptal edildi!');
+                    window.location.reload();
+                } else {
+                    alert(data.detail || 'Tamir talebi iptal edilirken bir hata oluştu');
+                }
+            })
+            .catch(error => {
+                console.error('Error cancelling repair request:', error);
+                alert('Tamir talebi iptal edilirken bir hata oluştu');
+            });
+        }
+    </script>
+</body>
+</html>
+

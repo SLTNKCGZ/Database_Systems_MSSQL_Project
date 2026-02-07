@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>ServicePool | Feedbacklerim</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen bg-slate-50">
+        <!-- Header -->
+        <header class="bg-white border-b border-slate-200 shadow-sm">
+            <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-black text-slate-800">SERVICE<span class="text-sky-400">POOL</span></h1>
+                    <p class="text-sm text-slate-400">Feedbacklerim</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/customer/orders" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-medium">
+                        <i class="fa-solid fa-shopping-cart mr-2"></i> Siparişlerim
+                    </a>
+                    <a href="/customer/offers" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-medium">
+                        <i class="fa-solid fa-file-invoice mr-2"></i> Tekliflerim
+                    </a>
+                    <a href="/dashboard" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-all font-medium">
+                        <i class="fa-solid fa-arrow-left mr-2"></i> Dashboard
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <div class="max-w-7xl mx-auto px-6 py-8">
+            <!-- Tarih Filtreleme -->
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 p-6 mb-6">
+                <h2 class="text-xl font-black text-slate-800 mb-4">Tarih Filtreleme</h2>
+                <form method="GET" action="/customer/feedback" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input type="hidden" name="token" value="{{ token }}">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Başlangıç Tarihi</label>
+                        <input type="date" name="start_date" value="{{ start_date }}" 
+                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Bitiş Tarihi</label>
+                        <input type="date" name="end_date" value="{{ end_date }}" 
+                            class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                    </div>
+                    <div class="flex items-end">
+                        <button type="submit" class="w-full px-6 py-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-all font-medium">
+                            <i class="fa-solid fa-filter mr-2"></i> Filtrele
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Feedback Listesi -->
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+                <div class="p-6 border-b border-slate-200 flex justify-between items-center">
+                    <h2 class="text-2xl font-black text-slate-800">Feedbacklerim</h2>
+                    <button onclick="showCreateFeedbackModal()" class="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-all font-medium">
+                        <i class="fa-solid fa-plus mr-2"></i> Yeni Feedback
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Feedback ID</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Sipariş ID</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Sipariş Tarihi</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Değerlendirme</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Yorum</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Feedback Tarihi</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest text-center">İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            {% if feedbacks %}
+                            {% for feedback in feedbacks %}
+                            <tr class="hover:bg-sky-50/50 transition-colors">
+                                <td class="px-6 py-4 font-black text-sky-600">#{{ feedback.FeedbackID }}</td>
+                                <td class="px-6 py-4 font-black text-slate-600">#{{ feedback.OrderID }}</td>
+                                <td class="px-6 py-4 font-medium text-slate-600">{{ feedback.OrderDate.strftime('%d.%m.%Y') if feedback.OrderDate else '-' }}</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        {% for i in range(1, 6) %}
+                                            {% if i <= feedback.Rating %}
+                                                <i class="fa-solid fa-star text-yellow-400"></i>
+                                            {% else %}
+                                                <i class="fa-regular fa-star text-slate-300"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <span class="ml-2 font-bold text-slate-700">({{ feedback.Rating }}/5)</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-slate-600">{{ feedback.FeedbackText[:100] if feedback.FeedbackText else '-' }}{% if feedback.FeedbackText and feedback.FeedbackText|length > 100 %}...{% endif %}</td>
+                                <td class="px-6 py-4 font-medium text-slate-600">{{ feedback.FeedbackDate.strftime('%d.%m.%Y') if feedback.FeedbackDate else '-' }}</td>
+                                <td class="px-6 py-4 text-center">
+                                    <div class="flex justify-center space-x-2">
+                                        <button data-feedback-id="{{ feedback.FeedbackID }}" data-order-id="{{ feedback.OrderID }}" data-rating="{{ feedback.Rating }}" data-text="{{ feedback.FeedbackText }}" class="edit-feedback-btn px-3 py-1 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg transition-all font-medium text-xs">
+                                            <i class="fa-solid fa-edit mr-1"></i> Düzenle
+                                        </button>
+                                        <button data-feedback-id="{{ feedback.FeedbackID }}" class="delete-feedback-btn px-3 py-1 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-lg transition-all font-medium text-xs">
+                                            <i class="fa-solid fa-trash mr-1"></i> Sil
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="7" class="px-6 py-12 text-center text-slate-400">
+                                    <i class="fa-solid fa-star text-4xl mb-4 opacity-50"></i>
+                                    <p class="text-lg font-medium">Henüz feedback bulunmuyor</p>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create/Edit Feedback Modal -->
+    <div id="feedback-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" onclick="closeFeedbackModal(event)">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-black text-slate-800" id="feedback-modal-title">Yeni Feedback</h2>
+                <button onclick="closeFeedbackModal(event)" class="close-feedback-btn text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Sipariş ID</label>
+                    <input type="number" id="feedback-order-id" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" placeholder="Sipariş ID">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Değerlendirme (1-5)</label>
+                    <select id="feedback-rating" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none">
+                        <option value="">Seçiniz</option>
+                        <option value="1">1 - Çok Kötü</option>
+                        <option value="2">2 - Kötü</option>
+                        <option value="3">3 - Orta</option>
+                        <option value="4">4 - İyi</option>
+                        <option value="5">5 - Çok İyi</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Yorumunuz</label>
+                    <textarea id="feedback-text" rows="4" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none" placeholder="Yorumunuzu buraya yazın..."></textarea>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-4">
+                <button onclick="closeFeedbackModal(event)" class="close-feedback-btn px-6 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-medium">
+                    İptal
+                </button>
+                <button onclick="submitFeedback()" class="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl transition-all font-medium">
+                    <i class="fa-solid fa-star mr-2"></i> Kaydet
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFeedbackId = null;
+        let isEditMode = false;
+
+        // Event delegation
+        document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.edit-feedback-btn')) {
+                    const btn = e.target.closest('.edit-feedback-btn');
+                    const feedbackId = parseInt(btn.getAttribute('data-feedback-id'));
+                    const orderId = parseInt(btn.getAttribute('data-order-id'));
+                    const rating = parseInt(btn.getAttribute('data-rating'));
+                    const text = btn.getAttribute('data-text') || '';
+                    editFeedback(feedbackId, orderId, rating, text);
+                } else if (e.target.closest('.delete-feedback-btn')) {
+                    const btn = e.target.closest('.delete-feedback-btn');
+                    const feedbackId = parseInt(btn.getAttribute('data-feedback-id'));
+                    deleteFeedback(feedbackId);
+                }
+            });
+        });
+
+        function showCreateFeedbackModal() {
+            isEditMode = false;
+            currentFeedbackId = null;
+            document.getElementById('feedback-modal-title').textContent = 'Yeni Feedback';
+            document.getElementById('feedback-order-id').value = '';
+            document.getElementById('feedback-order-id').disabled = false;
+            document.getElementById('feedback-rating').value = '';
+            document.getElementById('feedback-text').value = '';
+            document.getElementById('feedback-modal').classList.remove('hidden');
+            document.getElementById('feedback-modal').classList.add('flex');
+        }
+
+        function editFeedback(feedbackId, orderId, rating, text) {
+            isEditMode = true;
+            currentFeedbackId = feedbackId;
+            document.getElementById('feedback-modal-title').textContent = 'Feedback Düzenle';
+            document.getElementById('feedback-order-id').value = orderId;
+            document.getElementById('feedback-order-id').disabled = true;
+            document.getElementById('feedback-rating').value = rating;
+            document.getElementById('feedback-text').value = text || '';
+            document.getElementById('feedback-modal').classList.remove('hidden');
+            document.getElementById('feedback-modal').classList.add('flex');
+        }
+
+        function closeFeedbackModal(event) {
+            if (event.target.id === 'feedback-modal' || event.target.closest('.close-feedback-btn')) {
+                document.getElementById('feedback-modal').classList.add('hidden');
+                document.getElementById('feedback-modal').classList.remove('flex');
+                currentFeedbackId = null;
+                isEditMode = false;
+                document.getElementById('feedback-order-id').disabled = false;
+            }
+        }
+
+        function submitFeedback() {
+            const orderId = parseInt(document.getElementById('feedback-order-id').value);
+            const rating = parseInt(document.getElementById('feedback-rating').value);
+            const text = document.getElementById('feedback-text').value;
+            
+            if (!orderId) {
+                alert('Lütfen sipariş ID girin');
+                return;
+            }
+            
+            if (!rating || rating < 1 || rating > 5) {
+                alert('Lütfen 1-5 arası bir değerlendirme seçin');
+                return;
+            }
+            
+            if (!text || !text.trim()) {
+                alert('Lütfen bir yorum girin');
+                return;
+            }
+
+            if (isEditMode) {
+                // Update
+                fetch(`/customer/feedback/${currentFeedbackId}?rating=${rating}&comment=${encodeURIComponent(text)}`, {
+                    method: 'PUT',
+                    credentials: 'include'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert('Feedback başarıyla güncellendi!');
+                        window.location.reload();
+                    } else {
+                        alert(data.detail || 'Feedback güncellenirken bir hata oluştu');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating feedback:', error);
+                    alert('Feedback güncellenirken bir hata oluştu');
+                });
+            } else {
+                // Create
+                fetch(`/customer/orders/${orderId}/feedback?rating=${rating}&comment=${encodeURIComponent(text)}`, {
+                    method: 'POST',
+                    credentials: 'include'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert('Feedback başarıyla oluşturuldu!');
+                        window.location.reload();
+                    } else {
+                        alert(data.detail || 'Feedback oluşturulurken bir hata oluştu');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error creating feedback:', error);
+                    alert('Feedback oluşturulurken bir hata oluştu');
+                });
+            }
+        }
+
+        function deleteFeedback(feedbackId) {
+            if (!confirm('Bu feedback\'i silmek istediğinizden emin misiniz?')) {
+                return;
+            }
+            
+            fetch(`/customer/feedback/${feedbackId}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Feedback başarıyla silindi!');
+                    window.location.reload();
+                } else {
+                    alert(data.detail || 'Feedback silinirken bir hata oluştu');
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting feedback:', error);
+                alert('Feedback silinirken bir hata oluştu');
+            });
+        }
+    </script>
+</body>
+</html>
+

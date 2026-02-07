@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>ServicePool | Ürünlerim</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen bg-slate-50">
+        <!-- Header -->
+        <header class="bg-white border-b border-slate-200 shadow-sm">
+            <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-black text-slate-800">SERVICE<span class="text-sky-400">POOL</span></h1>
+                    <p class="text-sm text-slate-400">Ürünlerim</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/customer/orders" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-medium">
+                        <i class="fa-solid fa-shopping-cart mr-2"></i> Siparişlerim
+                    </a>
+                    <a href="/customer/offers" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-medium">
+                        <i class="fa-solid fa-file-invoice mr-2"></i> Tekliflerim
+                    </a>
+                    <a href="/customer/repair-requests" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-medium">
+                        <i class="fa-solid fa-wrench mr-2"></i> Tamir Talepleri
+                    </a>
+                    <a href="/dashboard" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl transition-all font-medium">
+                        <i class="fa-solid fa-arrow-left mr-2"></i> Dashboard
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <div class="max-w-7xl mx-auto px-6 py-8">
+            <!-- Products Listesi -->
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+                <div class="p-6 border-b border-slate-200 bg-gradient-to-r from-emerald-50 to-green-50 flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-black text-slate-800 flex items-center">
+                            <i class="fa-solid fa-box mr-3 text-emerald-600"></i>
+                            Ürünlerim
+                        </h2>
+                        <p class="text-sm text-slate-500 mt-1">Sahip olduğunuz ürünleri görüntüleyin</p>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Seri Numarası</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Ürün Adı</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Tip</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Ürün Kodu</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">MAC Adresi</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Firmware</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Durum</th>
+                                <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest text-center">İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            {% if error %}
+                            <tr>
+                                <td colspan="8" class="px-6 py-12 text-center text-red-500">
+                                    <i class="fa-solid fa-exclamation-triangle text-4xl mb-4"></i>
+                                    <p class="text-lg font-medium">Hata: {{ error }}</p>
+                                </td>
+                            </tr>
+                            {% elif products %}
+                            {% for product in products %}
+                            <tr class="hover:bg-sky-50/50 transition-colors">
+                                <td class="px-6 py-4 font-black text-sky-600">{{ product.SerialNumber }}</td>
+                                <td class="px-6 py-4 font-bold text-slate-800">{{ product.ProductName or '-' }}</td>
+                                <td class="px-6 py-4 font-medium text-slate-700">
+                                    {% if product.ProductType == 'Server' %}
+                                    <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold">Server</span>
+                                    {% elif product.ProductType == 'Storage' %}
+                                    <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-bold">Storage</span>
+                                    {% else %}
+                                    <span class="px-3 py-1 bg-slate-100 text-slate-800 rounded-full text-xs font-bold">Diğer</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 text-slate-600">{{ product.ProductCode or '-' }}</td>
+                                <td class="px-6 py-4 text-slate-600 font-mono text-sm">{{ product.MacAddress or '-' }}</td>
+                                <td class="px-6 py-4 text-slate-600">{{ product.FirmwareVersion or '-' }}</td>
+                                <td class="px-6 py-4">
+                                    {% if product.IsRepair == 1 or product.IsRepair == True %}
+                                    <span class="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-bold">Tamirde</span>
+                                    {% else %}
+                                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold">Aktif</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    {% if product.IsRepair == 0 or product.IsRepair == False %}
+                                    <button onclick="createRepairRequest('{{ product.SerialNumber }}')" class="px-4 py-2 bg-orange-50 text-orange-600 hover:bg-orange-600 hover:text-white rounded-xl transition-all font-medium text-sm">
+                                        <i class="fa-solid fa-wrench mr-1"></i> Tamir Talebi
+                                    </button>
+                                    {% else %}
+                                    <span class="text-slate-400 text-sm">Tamir sürecinde</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            {% else %}
+                            <tr>
+                                <td colspan="8" class="px-6 py-12 text-center text-slate-400">
+                                    <i class="fa-solid fa-inbox text-4xl mb-4 opacity-50"></i>
+                                    <p class="text-lg font-medium">Henüz ürün bulunmuyor</p>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function createRepairRequest(serialNumber) {
+            if (!confirm('Bu ürün için tamir talebi oluşturmak istediğinizden emin misiniz?')) {
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('serial_number', serialNumber);
+            
+            fetch('/customer/repair-requests/create', {
+                method: 'POST',
+                body: formData,
+                credentials: 'include'
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.detail || 'Tamir talebi oluşturulurken bir hata oluştu');
+                }
+                return data;
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Tamir talebi başarıyla oluşturuldu!');
+                    window.location.reload();
+                } else {
+                    alert(data.detail || 'Tamir talebi oluşturulurken bir hata oluştu');
+                }
+            })
+            .catch(error => {
+                console.error('Error creating repair request:', error);
+                alert(error.message || 'Tamir talebi oluşturulurken bir hata oluştu');
+            });
+        }
+    </script>
+</body>
+</html>
+

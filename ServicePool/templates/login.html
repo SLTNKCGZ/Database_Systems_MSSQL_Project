@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <title>ServicePool | Login</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .tab-transition { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        html { font-size: 18px; }
+    </style>
+</head>
+<body class="bg-slate-100 flex items-center justify-center min-h-screen p-6">
+    <div class="w-full max-w-xl">
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-white shadow-lg mb-4">
+                <i class="fa-solid fa-key text-5xl text-blue-700"></i>
+            </div>
+            <h1 class="text-5xl font-extrabold text-slate-900 tracking-tight">Service<span class="text-blue-700">Pool</span></h1>
+            <p class="text-slate-500 mt-2 text-lg font-medium">Secure Access Portal</p>
+        </div>
+
+        <div class="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-white/50">
+            <div class="flex p-3 bg-slate-50/50 gap-2">
+                <button onclick="switchRole('employee')" id="emp-tab" class="flex-1 flex items-center justify-center py-5 rounded-3xl text-sm font-bold uppercase tracking-wider tab-transition bg-white shadow-md text-blue-700 border border-blue-100">
+                    <i class="fa-solid fa-user-tie mr-3 text-lg"></i> Employee
+                </button>
+                <button onclick="switchRole('customer')" id="cust-tab" class="flex-1 flex items-center justify-center py-5 rounded-3xl text-sm font-bold uppercase tracking-wider tab-transition text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-building-user mr-3 text-lg"></i> Customer
+                </button>
+            </div>
+
+            <div class="p-12">
+                <form action="/auth/login" method="POST" class="space-y-6">
+                    <input type="hidden" name="role" id="role-input" value="employee">
+                    <div class="space-y-2">
+                        <label id="id-label" class="text-md font-bold text-slate-700 ml-1">National ID (TC Number)</label>
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600 transition-colors">
+                                <i id="id-icon" class="fa-solid fa-id-card text-xl"></i>
+                            </div>
+                            <input type="text" name="identifier" required class="block w-full pl-14 pr-4 py-5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all text-lg" placeholder="Enter ID">
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-md font-bold text-slate-700 ml-1">Password</label>
+                        <div class="relative group">
+                            <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600">
+                                <i class="fa-solid fa-lock text-xl"></i>
+                            </div>
+                            <input type="password" name="password" required class="block w-full pl-14 pr-4 py-5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all text-lg" placeholder="••••••••">
+                        </div>
+                    </div>
+
+                    <button type="submit" id="main-button" class="w-full py-6 rounded-2xl font-bold text-white text-xl shadow-xl bg-blue-700 hover:bg-blue-800 transition-all">
+                        Sign In
+                    </button>
+                </form>
+
+                <div class="mt-8 pt-6 border-t text-center">
+                    <p class="text-slate-500">New to the platform? <a href="/auth/register" id="register-link" class="text-blue-700 font-bold hover:underline">Create Account</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function switchRole(role) {
+            const empTab = document.getElementById('emp-tab');
+            const custTab = document.getElementById('cust-tab');
+            const idLabel = document.getElementById('id-label');
+            const idIcon = document.getElementById('id-icon');
+            const mainBtn = document.getElementById('main-button');
+            const roleInput = document.getElementById('role-input');
+            const registerLink = document.getElementById('register-link');
+            
+            if(role === 'employee') {
+                empTab.className = "flex-1 flex items-center justify-center py-5 rounded-3xl text-sm font-bold uppercase tracking-wider tab-transition bg-white shadow-md text-blue-700 border border-blue-100";
+                custTab.className = "flex-1 flex items-center justify-center py-5 rounded-3xl text-sm font-bold uppercase tracking-wider tab-transition text-slate-400 hover:text-slate-600";
+                idLabel.innerText = "National ID (TC Number)";
+                idIcon.className = "fa-solid fa-id-card text-xl";
+                mainBtn.className = "w-full py-6 rounded-2xl font-bold text-white text-xl shadow-xl bg-blue-700 hover:bg-blue-800 transition-all";
+                if (roleInput) roleInput.value = 'employee';
+            } else {
+                custTab.className = "flex-1 flex items-center justify-center py-5 rounded-3xl text-sm font-bold uppercase tracking-wider tab-transition bg-white shadow-md text-emerald-700 border border-emerald-100";
+                empTab.className = "flex-1 flex items-center justify-center py-5 rounded-3xl text-sm font-bold uppercase tracking-wider tab-transition text-slate-400 hover:text-slate-600";
+                idLabel.innerText = "Trade Registry Number";
+                idIcon.className = "fa-solid fa-hashtag text-xl";
+                mainBtn.className = "w-full py-6 rounded-2xl font-bold text-white text-xl shadow-xl bg-emerald-600 hover:bg-emerald-700 transition-all";
+                if (roleInput) roleInput.value = 'customer';
+            }
+            
+            // Register linkini güncelle
+            if (registerLink) {
+                registerLink.href = `/auth/register?role=${role}`;
+            }
+        }
+        
+        // Sayfa yüklendiğinde URL'deki role parametresine göre tab'ı ayarla
+        window.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const role = urlParams.get('role');
+            if (role === 'customer') {
+                switchRole('customer');
+            } else {
+                switchRole('employee');
+            }
+        });
+    </script>
+</body>
+</html>
+</html>
